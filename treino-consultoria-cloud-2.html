@@ -967,12 +967,23 @@ function showSessionPSEModal(weekId,dayCode){
   $("#sessionPseGrid").addEventListener("click",e=>{
     const btn=e.target.closest("[data-spse]");if(!btn)return;
     selectedPSE=parseInt(btn.dataset.spse);
-    $$(".spse-btn","#modal").forEach(b=>b.classList.toggle("on",parseInt(b.dataset.spse)===selectedPSE));
-    $$(".spse-btn","#modal").forEach(b=>b.style.background=b.classList.contains("on")?`var(--pc)`:"");
-    $("#spseSelected").textContent=`PSE ${selectedPSE} selecionada`;
+    const modal=$("#modal");
+    $$(`.spse-btn`,modal).forEach(b=>{
+      const on=parseInt(b.dataset.spse)===selectedPSE;
+      b.classList.toggle("on",on);
+      const colors=["#6b7280","#4a90d9","#4a90d9","#46c479","#46c479","#e8b23a","#e8b23a","#f0812b","#f0412b","#cc1f0f","#8b0000"];
+      b.style.background=on?colors[parseInt(b.dataset.spse)]:"";
+      b.style.borderColor=on?colors[parseInt(b.dataset.spse)]:"";
+      b.style.color=on?"#fff":"";
+    });
+    $("#spseSelected").textContent=`PSE ${selectedPSE} selecionada ✓`;
     $("#confirmSessionBtn").disabled=false;
   });
-  $("#confirmSessionBtn").onclick=()=>{closeModal();finishSession(weekId,dayCode,selectedPSE);};
+  $("#confirmSessionBtn").onclick=()=>{
+    if(selectedPSE===null){toast("Selecione a PSE antes","bad");return;}
+    closeModal();
+    finishSession(weekId,dayCode,selectedPSE);
+  };
 }
 
 async function finishSession(weekId,dayCode,sessionPSE){
