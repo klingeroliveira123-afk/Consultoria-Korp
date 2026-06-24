@@ -209,13 +209,13 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .serie-card.completed .sc-status{color:var(--good)}
 
 /* PSE section */
-.pse-section{padding:12px 14px;border-top:1px solid var(--line)}
-.serie-card.completed .pse-section{border-top-color:rgba(70,196,121,.2)}
-.pse-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:700;margin-bottom:8px}
-.pse-grid{display:grid;grid-template-columns:repeat(11,1fr);gap:4px}
-.pse-btn{border:1px solid var(--line);background:var(--bg);color:var(--ink-dim);border-radius:8px;padding:8px 4px;font-size:13px;font-weight:800;text-align:center;transition:.1s;aspect-ratio:1}
-.pse-btn:hover{transform:scale(1.1);border-color:var(--ink-faint)}
-.pse-btn.on{color:#fff;transform:scale(1.1);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.pse-section{padding:10px 14px 0}
+.pse-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:700;margin-bottom:7px}
+.pse-grid{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.pse-grid::-webkit-scrollbar{display:none}
+.pse-btn{border:1px solid var(--line);background:var(--bg);color:var(--ink-dim);border-radius:9px;padding:10px 0;font-size:14px;font-weight:800;text-align:center;flex:none;width:40px;transition:.1s}
+.pse-btn:hover{transform:scale(1.08)}
+.pse-btn.on{color:#fff;transform:scale(1.08);box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .pse-0{--pc:#6b7280}.pse-1{--pc:#4a90d9}.pse-2{--pc:#4a90d9}.pse-3{--pc:#46c479}.pse-4{--pc:#46c479}.pse-5{--pc:#e8b23a}.pse-6{--pc:#e8b23a}.pse-7{--pc:#f0812b}.pse-8{--pc:#f0412b}.pse-9{--pc:#cc1f0f}.pse-10{--pc:#8b0000}
 .pse-btn.on{background:var(--pc);border-color:var(--pc)}
 .pse-btn:not(.on):hover{border-color:var(--pc);color:var(--pc)}
@@ -329,9 +329,19 @@ svg.lc .area{opacity:.1}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.good{border-color:var(--good)}.toast.bad{border-color:var(--accent)}
 .aluno-only{display:none}
+body.mode-aluno .panel.side{display:none!important}
+body.mode-aluno .train-grid{grid-template-columns:1fr!important}
+body.mode-aluno #weekEditor{border:none;background:transparent}
+body.snapshot .switcher,body.snapshot .modeswitch,body.snapshot .menu-wrap{display:none!important}
 body.mode-aluno .coach-only{display:none!important}
 body.mode-aluno .aluno-only{display:block}
-body.snapshot .switcher,body.snapshot .modeswitch,body.snapshot .menu-wrap{display:none!important}
+body.mode-aluno .panel.side{display:none!important}
+body.mode-aluno .train-grid{grid-template-columns:1fr!important}
+body.mode-aluno #weekEditor{border:none;background:transparent;box-shadow:none}
+.week-picker{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px;scrollbar-width:none}
+.week-picker::-webkit-scrollbar{display:none}
+.week-pill{border:1px solid var(--line);background:var(--bg2);color:var(--ink-dim);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;white-space:nowrap;flex:none;cursor:pointer}
+.week-pill.on{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
 </style>
 </head>
 <body class="mode-coach">
@@ -764,6 +774,9 @@ function renderWeekEditor(){
   if(coach){
     daysHtml=`<div class="days">${w.days.map(d=>coachDayHTML(w,d,prev)).join("")}</div>`;
   }else{
+    const allWeeks=visibleWeeks();
+    const weekPicker=allWeeks.length>1?`<div class="week-picker">${allWeeks.map(wk=>`<button class="week-pill ${wk.id===ui.selWeek?"on":""}" data-wk="${wk.id}">${esc(wk.label)}</button>`).join("")}</div>`:"";
+
     const days=w.days;
     const dayIdx=Math.min(ui.curDay,days.length-1);
     const d=days[dayIdx];
@@ -778,15 +791,14 @@ function renderWeekEditor(){
           <span class="lbl">Sessão</span>
           <span class="val" id="sessionTimerDisplay">${sessionRunning?fmtTime(Math.floor((Date.now()-ui.sessionStart)/1000)):"00:00"}</span>
         </div>
-        <div style="flex:1">
-          <div style="font-family:var(--disp);font-size:17px;font-weight:700">${esc(w.label)}</div>
-          <div style="font-size:12.5px;color:var(--ink-dim);margin-top:2px">${fmtDateFull(w.startDate)} – ${fmtDateFull(w.endDate)}</div>
-          ${w.note?`<div style="font-size:12px;color:var(--info);margin-top:4px">📝 ${esc(w.note)}</div>`:""}
+        <div style="flex:1;min-width:0">
+          <div style="font-family:var(--disp);font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(w.label)}</div>
+          ${w.note?`<div style="font-size:11.5px;color:var(--info);margin-top:2px">📝 ${esc(w.note)}</div>`:""}
         </div>
-        ${!sessionRunning?`<button class="btn good" id="startSessionBtn">▶ Iniciar sessão</button>`:`<button class="btn danger ghost" id="endSessionBtn">■ Finalizar</button>`}
+        ${!sessionRunning?`<button class="btn good" id="startSessionBtn" style="flex:none">▶ Iniciar</button>`:`<button class="btn ghost" id="endSessionBtn" style="flex:none;border-color:var(--accent);color:var(--accent)">■ Finalizar</button>`}
       </div>
     </div>`;
-    daysHtml=sessBar+`<div class="day-tabs">${tabs}</div><div id="alunoday">${alunoDayHTML(d,dayIdx)}</div>`;
+    daysHtml=weekPicker+sessBar+`<div class="day-tabs">${tabs}</div><div id="alunoday">${alunoDayHTML(d,dayIdx)}</div>`;
   }
   box.innerHTML=head+actions+noteCoach+daysHtml;
   if(!coach&&ui.sessionStart)startSessionTimerDisplay();
@@ -842,19 +854,19 @@ function alunoDayHTML(d,dayIdx){
           <div class="sc-num">${i+1}</div>
           <div class="sc-inputs">
             <div class="sc-field"><label>Carga (kg)</label><input type="number" class="s-weight" data-ex="${ex.id}" data-si="${i}" value="${sr.weight!=null?sr.weight:""}" placeholder="${esc(ex.weight||"—")}" step="0.5" ${isCompleted?"disabled":""}></div>
-            <div class="sc-field"><label>Repetições</label><input type="number" class="s-reps" data-ex="${ex.id}" data-si="${i}" value="${sr.reps!=null?sr.reps:""}" placeholder="${esc(ex.reps||"—")}" ${isCompleted?"disabled":""}></div>
+            <div class="sc-field"><label>Reps</label><input type="number" class="s-reps" data-ex="${ex.id}" data-si="${i}" value="${sr.reps!=null?sr.reps:""}" placeholder="${esc(ex.reps||"—")}" ${isCompleted?"disabled":""}></div>
           </div>
-          <div class="sc-status">${isCompleted?"✓ Feita":hasPSE?"Pronto!":"PSE?"}</div>
+          <div class="sc-status">${isCompleted?"✓":"—"}</div>
         </div>
         ${!isCompleted?`<div class="pse-section">
-          <div class="pse-label">PSE desta série — como foi o esforço?</div>
+          <div class="pse-label">Como foi o esforço? (0–10)</div>
           <div class="pse-grid">${pseGrid}</div>
         </div>
         <div class="conclude-section">
           <button class="conclude-btn ${canConclude?"ready":""}" data-ex="${ex.id}" data-si="${i}" ${canConclude?"":"disabled"}>
-            ${canConclude?"✓ Concluir série":"Selecione a PSE para concluir"}
+            ${canConclude?"✓ Concluir série":"Selecione o esforço (PSE) acima"}
           </button>
-        </div>`:`<div style="padding:8px 14px 12px;font-size:12.5px;color:var(--good)">✓ PSE ${sr.pse} · ${sr.weight||ex.weight||"—"} kg × ${sr.reps||ex.reps||"—"} reps</div>`}
+        </div>`:`<div style="padding:6px 14px 10px;font-size:12px;color:var(--good)">✓ PSE ${sr.pse} · ${sr.weight||ex.weight||"—"} kg × ${sr.reps||ex.reps||"—"} reps</div>`}
       </div>`;
     }).join("");
     const muscleTag=ex.muscle?`<span class="ex-pill">🏋 ${esc(ex.muscle)}</span>`:"";
