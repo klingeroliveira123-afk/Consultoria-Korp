@@ -192,47 +192,42 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .ex-card .ex-how{padding:8px 16px;font-size:13px;color:#1d6fb8;background:#f0f7ff;border-bottom:1.5px solid #dbeafe}
 .ex-series-wrap{padding:8px 14px 12px}
 
-/* ===== SERIE CARD — REDESIGN LIMPO ===== */
-.serie-card{margin:8px 0;background:var(--bg);border:1.5px solid var(--line);border-radius:14px;overflow:hidden;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.serie-card.active{border-color:var(--accent);box-shadow:0 2px 8px rgba(232,40,26,.12)}
-.serie-card.completed{border-color:var(--good);background:var(--good-soft)}
-.sc-head{display:flex;align-items:center;gap:10px;padding:12px 14px}
-.sc-num{width:32px;height:32px;border-radius:50%;background:var(--bg2);border:1.5px solid var(--line);display:grid;place-items:center;font-weight:800;font-size:14px;color:var(--ink-faint);flex:none}
+/* ===== SERIE CARD ===== */
+.serie-card{margin:8px 0;background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;overflow:hidden;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.serie-card.active{border-color:var(--accent);box-shadow:0 2px 10px rgba(232,40,26,.12)}
+.serie-card.completed{border-color:#16a34a;background:#f0fdf4}
+/* linha de inputs */
+.sc-head{display:flex;align-items:center;gap:8px;padding:10px 12px}
+.sc-num{width:28px;height:28px;border-radius:50%;background:#f3f4f6;border:1.5px solid #d1d5db;display:grid;place-items:center;font-weight:800;font-size:13px;color:#6b7280;flex:none}
 .serie-card.active .sc-num{background:var(--accent);border-color:var(--accent);color:#fff}
-.serie-card.completed .sc-num{background:var(--good);border-color:var(--good);color:#fff;font-size:16px}
-.sc-inputs{display:flex;gap:8px;flex:1;align-items:center}
-.sc-field{display:flex;flex-direction:column;gap:3px;flex:1}
-.sc-field label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:700}
-.sc-numfield{display:flex;align-items:center;background:var(--bg2);border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
-.sc-numfield button{border:none;background:transparent;color:var(--accent);font-size:20px;font-weight:700;width:34px;height:42px;flex:none;display:grid;place-items:center;cursor:pointer;transition:.1s}
-.sc-numfield button:active{background:var(--accent-soft)}
-.sc-numfield input{border:none;background:transparent;color:var(--ink);font-family:var(--mono);font-size:17px;font-weight:800;text-align:center;flex:1;min-width:0;height:42px;padding:0;outline:none}
+.serie-card.completed .sc-num{background:#16a34a;border-color:#16a34a;color:#fff}
+.sc-inputs{display:flex;gap:6px;flex:1}
+.sc-field{display:flex;flex-direction:column;gap:2px;flex:1}
+.sc-field label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;font-weight:700}
+.sc-numfield{display:flex;align-items:center;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:9px;overflow:hidden}
+.sc-numfield button{border:none;background:transparent;color:var(--accent);font-size:18px;font-weight:700;width:32px;height:38px;flex:none;display:grid;place-items:center;cursor:pointer}
+.sc-numfield button:active{background:#fef2f2}
+.sc-numfield input{border:none;background:transparent;color:#111827;font-family:var(--mono);font-size:16px;font-weight:800;text-align:center;flex:1;min-width:0;height:38px;padding:0;outline:none}
 .sc-numfield input::-webkit-outer-spin-button,.sc-numfield input::-webkit-inner-spin-button{-webkit-appearance:none}
-.sc-check{border:1.5px solid var(--line);background:var(--bg2);border-radius:10px;width:42px;height:42px;flex:none;display:grid;place-items:center;font-size:18px;cursor:pointer;color:var(--ink-faint);opacity:.4;transition:.15s}
-.sc-check.ready{opacity:1;border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
-.sc-check.ready:active{background:var(--accent);color:#fff;transform:scale(.92)}
-.serie-card.completed .sc-check{border-color:var(--good);background:var(--good-soft);color:var(--good);opacity:1;cursor:default}
-
-/* PSE — picker estilo iOS */
-.pse-section{padding:8px 14px 12px;border-top:1.5px solid var(--line)}
+/* PSE scroll horizontal */
+.pse-section{padding:8px 12px 4px;border-top:1px solid #f3f4f6}
 .serie-card.completed .pse-section{display:none}
-.pse-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:700;margin-bottom:8px}
-.pse-picker-wrap{position:relative;height:44px;overflow:hidden;border-radius:10px;background:var(--bg2);border:1.5px solid var(--line)}
-.pse-picker-wrap::before,.pse-picker-wrap::after{content:"";position:absolute;left:0;right:0;height:14px;z-index:2;pointer-events:none}
-.pse-picker-wrap::before{top:0;background:linear-gradient(var(--bg2),transparent)}
-.pse-picker-wrap::after{bottom:0;background:linear-gradient(transparent,var(--bg2))}
-.pse-picker-track{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:0;height:44px;align-items:center}
-.pse-scroll{display:flex;gap:6px;overflow-x:auto;padding:6px 8px;scrollbar-width:none}
+.pse-label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;font-weight:700;margin-bottom:6px}
+.pse-scroll{display:flex;gap:5px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
 .pse-scroll::-webkit-scrollbar{display:none}
-.pse-btn{border:1.5px solid var(--line);background:var(--bg);border-radius:10px;padding:8px 0;font-size:16px;font-weight:800;text-align:center;flex:none;width:46px;transition:.15s;cursor:pointer;color:var(--ink-dim)}
+.pse-btn{border:1.5px solid #e5e7eb;background:#f9fafb;border-radius:9px;padding:8px 0;font-size:15px;font-weight:800;text-align:center;flex:none;width:44px;cursor:pointer;color:#374151;transition:.12s}
 .pse-btn:active{transform:scale(.88)}
-.pse-btn.on{color:#fff;transform:scale(1.08);box-shadow:0 2px 8px rgba(0,0,0,.15)}
-.pse-0{--pc:#9ca3af}.pse-1{--pc:#60a5fa}.pse-2{--pc:#34d399}.pse-3{--pc:#34d399}.pse-4{--pc:#a3e635}.pse-5{--pc:#fbbf24}.pse-6{--pc:#fb923c}.pse-7{--pc:#f97316}.pse-8{--pc:#ef4444}.pse-9{--pc:#dc2626}.pse-10{--pc:#991b1b}
+.pse-btn.on{color:#fff;transform:scale(1.08);box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.pse-0{--pc:#9ca3af}.pse-1{--pc:#60a5fa}.pse-2{--pc:#34d399}.pse-3{--pc:#4ade80}.pse-4{--pc:#a3e635}.pse-5{--pc:#fbbf24}.pse-6{--pc:#fb923c}.pse-7{--pc:#f97316}.pse-8{--pc:#ef4444}.pse-9{--pc:#dc2626}.pse-10{--pc:#991b1b}
 .pse-btn.on{background:var(--pc);border-color:var(--pc)}
-
-/* conclude */
-.conclude-section{display:none}
-.conclude-btn{display:none}
+/* botão concluir — largura total abaixo */
+.conclude-section{padding:8px 12px 12px}
+.conclude-btn{width:100%;border:none;border-radius:10px;padding:13px;font-weight:800;font-size:16px;background:#f3f4f6;color:#9ca3af;cursor:default;transition:.15s}
+.conclude-btn.ready{background:var(--accent);color:#fff;cursor:pointer;box-shadow:0 3px 10px rgba(232,40,26,.3)}
+.conclude-btn.ready:active{background:#c0201a}
+.serie-card.completed .conclude-section{display:none}
+/* ícone sc-check — não usado mais */
+.sc-check{display:none}
 
 /* rest overlay */
 .rest-overlay{position:fixed;inset:0;z-index:400;background:rgba(6,7,9,.96);display:none;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:24px}
@@ -905,11 +900,15 @@ function alunoDayHTML(d,dayIdx){
               </div>
             </div>
           </div>
-          <button class="sc-check conclude-btn ${hasPSE?"ready":""}" data-ex="${ex.id}" data-si="${i}" ${hasPSE?"":"disabled"}>✓</button>
         </div>
         <div class="pse-section">
-          <div class="pse-label">Esforço percebido (PSE 0–10)</div>
+          <div class="pse-label">Como foi o esforço? (PSE 0–10)</div>
           <div class="pse-scroll">${pseRow}</div>
+        </div>
+        <div class="conclude-section">
+          <button class="conclude-btn ${hasPSE?"ready":""}" data-ex="${ex.id}" data-si="${i}" ${hasPSE?"":"disabled"}>
+            ${hasPSE?"✓ Concluir série — iniciar descanso":"← Selecione o esforço acima"}
+          </button>
         </div>
       </div>`;
     }).join("");
@@ -1430,8 +1429,12 @@ document.addEventListener("click",e=>{
       // update PSE buttons visually
       if(sc){
         sc.querySelectorAll(".pse-btn").forEach(b=>b.classList.toggle("on",parseInt(b.dataset.pse)===val));
-        const cb=sc.querySelector(".sc-check,.conclude-btn");
-        if(cb){cb.disabled=false;cb.classList.add("ready");}
+        const cb=sc.querySelector(".conclude-btn");
+        if(cb){
+          cb.disabled=false;
+          cb.classList.add("ready");
+          cb.textContent="✓ Concluir série — iniciar descanso";
+        }
         sc.classList.add("active");
       }
     }return;}
