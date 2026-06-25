@@ -191,43 +191,44 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .ex-card .ex-pill{font-size:13px;background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:5px 13px;color:var(--ink-dim);font-weight:600}
 .ex-card .ex-how{padding:10px 16px;font-size:15px;color:var(--info);background:rgba(90,169,230,.07);border-bottom:1px solid var(--line)}
 
-/* serie card */
-.serie-card{margin:12px 16px;background:var(--bg2);border:2px solid var(--line);border-radius:14px;overflow:hidden;transition:.2s}
-.serie-card.active{border-color:var(--accent);box-shadow:0 0 0 4px rgba(240,65,43,.12)}
+/* serie card — compacto */
+.serie-card{margin:6px 14px;background:var(--bg2);border:1.5px solid var(--line);border-radius:11px;overflow:hidden;transition:.2s}
+.serie-card.active{border-color:var(--accent);background:rgba(240,65,43,.04)}
 .serie-card.completed{border-color:var(--good);background:rgba(70,196,121,.05)}
-.serie-card .sc-head{display:flex;align-items:center;gap:14px;padding:14px 16px}
-.sc-num{width:38px;height:38px;border-radius:10px;background:var(--bg);border:2px solid var(--line);display:grid;place-items:center;font-family:var(--mono);font-weight:800;font-size:18px;color:var(--ink-faint);flex:none}
+.serie-card .sc-head{display:flex;align-items:center;gap:8px;padding:9px 11px}
+.sc-num{width:26px;height:26px;border-radius:7px;background:var(--bg);border:1.5px solid var(--line);display:grid;place-items:center;font-family:var(--mono);font-weight:800;font-size:13px;color:var(--ink-faint);flex:none}
 .serie-card.active .sc-num{background:var(--accent);border-color:var(--accent);color:#fff}
 .serie-card.completed .sc-num{background:var(--good);border-color:var(--good);color:#08130c}
-.sc-inputs{display:flex;gap:12px;flex:1;align-items:flex-end}
-.sc-field{display:flex;flex-direction:column;gap:5px;flex:1}
-.sc-field label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:700}
-/* +/- steppers */
-.sc-numfield{display:flex;align-items:center;background:var(--bg);border:2px solid var(--line);border-radius:12px;overflow:hidden}
-.sc-numfield button{border:none;background:transparent;color:var(--ink);font-size:24px;font-weight:700;width:48px;height:56px;flex:none;display:grid;place-items:center;cursor:pointer}
+.sc-inputs{display:flex;gap:6px;flex:1;align-items:center}
+.sc-field{display:flex;flex-direction:column;gap:2px;flex:1}
+.sc-field label{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);font-weight:700}
+/* +/- steppers compactos */
+.sc-numfield{display:flex;align-items:center;background:var(--bg);border:1.5px solid var(--line);border-radius:8px;overflow:hidden}
+.sc-numfield button{border:none;background:transparent;color:var(--ink);font-size:17px;font-weight:700;width:30px;height:36px;flex:none;display:grid;place-items:center;cursor:pointer}
 .sc-numfield button:active{background:var(--accent-soft);color:var(--accent)}
-.sc-numfield input{border:none;background:transparent;color:var(--ink);font-family:var(--mono);font-size:22px;font-weight:800;text-align:center;flex:1;min-width:0;height:56px;padding:0;outline:none}
+.sc-numfield input{border:none;background:transparent;color:var(--ink);font-family:var(--mono);font-size:15px;font-weight:800;text-align:center;flex:1;min-width:0;height:36px;padding:0;outline:none}
 .sc-numfield input::-webkit-outer-spin-button,.sc-numfield input::-webkit-inner-spin-button{-webkit-appearance:none}
-.sc-status{margin-left:auto;font-size:13px;font-weight:700;color:var(--ink-faint)}
-.serie-card.completed .sc-status{color:var(--good)}
+/* botão concluir compacto — ícone checkmark */
+.sc-check{border:1.5px solid var(--line);background:var(--bg);border-radius:8px;width:36px;height:36px;flex:none;display:grid;place-items:center;font-size:16px;cursor:pointer;opacity:.35;transition:.15s}
+.sc-check.ready{opacity:1;border-color:var(--accent);color:var(--accent)}
+.sc-check.ready:active{background:var(--accent);color:#fff;transform:scale(.9)}
+.serie-card.completed .sc-check{border-color:var(--good);background:var(--good-soft);color:var(--good);opacity:1;cursor:default}
 
-/* PSE section */
-.pse-section{padding:12px 16px 6px;border-top:1px solid var(--line)}
+/* PSE compacta — linha horizontal sob os inputs */
+.pse-section{padding:5px 11px 9px;border-top:1px solid var(--line)}
 .serie-card.completed .pse-section{display:none}
-.pse-label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:700;margin-bottom:10px}
-.pse-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+.pse-label{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);font-weight:700;margin-bottom:5px}
+.pse-scroll{display:flex;gap:4px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
 .pse-scroll::-webkit-scrollbar{display:none}
-.pse-btn{border:2px solid var(--line);background:var(--bg);border-radius:12px;padding:14px 0;font-size:18px;font-weight:800;text-align:center;flex:none;width:52px;transition:.15s;cursor:pointer}
-.pse-btn:active{transform:scale(.93)}
-.pse-btn.on{color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.3);transform:scale(1.1)}
+.pse-btn{border:1.5px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 0;font-size:14px;font-weight:800;text-align:center;flex:none;width:40px;transition:.12s;cursor:pointer}
+.pse-btn:active{transform:scale(.88)}
+.pse-btn.on{color:#fff;transform:scale(1.06)}
 .pse-0{--pc:#6b7280}.pse-1{--pc:#4a90d9}.pse-2{--pc:#4a90d9}.pse-3{--pc:#46c479}.pse-4{--pc:#46c479}.pse-5{--pc:#e8b23a}.pse-6{--pc:#e8b23a}.pse-7{--pc:#f0812b}.pse-8{--pc:#f0412b}.pse-9{--pc:#cc1f0f}.pse-10{--pc:#8b0000}
 .pse-btn.on{background:var(--pc);border-color:var(--pc)}
 
-/* concluir button */
-.conclude-section{padding:10px 16px 16px}
-.conclude-btn{width:100%;border:2px solid var(--line);border-radius:14px;padding:16px;font-weight:800;font-size:18px;background:var(--bg2);color:var(--ink-faint);transition:.15s;cursor:default}
-.conclude-btn.ready{background:var(--accent);border-color:var(--accent);color:#fff;cursor:pointer}
-.conclude-btn.ready:active{background:#cc2d1a}
+/* conclude — mantido oculto, lógica via sc-check */
+.conclude-section{display:none}
+.conclude-btn{display:none}
 
 /* rest overlay */
 .rest-overlay{position:fixed;inset:0;z-index:400;background:rgba(6,7,9,.96);display:none;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:24px}
@@ -858,7 +859,8 @@ function alunoDayHTML(d,dayIdx){
         return`<div class="serie-card completed" id="sc_${ex.id}_${i}">
           <div class="sc-head">
             <div class="sc-num">✓</div>
-            <div style="flex:1;font-size:16px;color:var(--good);font-weight:700">${sr.weight||ex.weight||"—"} kg × ${sr.reps||ex.reps||"—"} reps · PSE ${sr.pse!=null?sr.pse:"—"}</div>
+            <div style="flex:1;font-size:14px;color:var(--good);font-weight:700">${sr.weight||ex.weight||"—"} kg × ${sr.reps||ex.reps||"—"} reps</div>
+            <div style="font-size:12px;color:var(--ink-faint)">PSE ${sr.pse!=null?sr.pse:"—"}</div>
           </div>
         </div>`;
       }
@@ -867,7 +869,7 @@ function alunoDayHTML(d,dayIdx){
           <div class="sc-num">${i+1}</div>
           <div class="sc-inputs">
             <div class="sc-field">
-              <label>Carga (kg)</label>
+              <label>Carga kg</label>
               <div class="sc-numfield">
                 <button data-step="-0.5" data-ex="${ex.id}" data-si="${i}" data-field="weight">−</button>
                 <input type="number" class="s-weight" data-ex="${ex.id}" data-si="${i}" value="${wVal}" step="0.5" inputmode="decimal">
@@ -883,15 +885,11 @@ function alunoDayHTML(d,dayIdx){
               </div>
             </div>
           </div>
+          <button class="sc-check conclude-btn ${hasPSE?"ready":""}" data-ex="${ex.id}" data-si="${i}" title="${hasPSE?"Concluir série":"Selecione a PSE primeiro"}" ${hasPSE?"":"disabled"}>✓</button>
         </div>
         <div class="pse-section">
-          <div class="pse-label">Esforço desta série (PSE 0–10)</div>
+          <div class="pse-label">PSE 0–10</div>
           <div class="pse-scroll">${pseRow}</div>
-        </div>
-        <div class="conclude-section">
-          <button class="conclude-btn ${hasPSE?"ready":""}" data-ex="${ex.id}" data-si="${i}" ${hasPSE?"":"disabled"}>
-            ${hasPSE?"✓ Concluir série e iniciar descanso":"← Selecione o esforço acima"}
-          </button>
         </div>
       </div>`;
     }).join("");
@@ -1385,13 +1383,14 @@ document.addEventListener("click",e=>{
       // update PSE buttons visually
       if(sc){
         sc.querySelectorAll(".pse-btn").forEach(b=>b.classList.toggle("on",parseInt(b.dataset.pse)===val));
-        const cb=sc.querySelector(".conclude-btn");
-        if(cb){cb.disabled=false;cb.classList.add("ready");cb.textContent="✓ Concluir série e iniciar descanso";}
+        const cb=sc.querySelector(".sc-check,.conclude-btn");
+        if(cb){cb.disabled=false;cb.classList.add("ready");}
+        sc.classList.add("active");
       }
     }return;}
 
   // conclude button
-  const done=t.closest(".conclude-btn");if(done&&!done.disabled){
+  const done=t.closest(".conclude-btn,.sc-check");if(done&&!done.disabled){
     const exId=done.dataset.ex,si=parseInt(done.dataset.si);
     const w=findWeek(ui.selWeek);const d=w?.days.find(d=>d.exercises.some(e=>e.id===exId));const ex=d?.exercises.find(e=>e.id===exId);
     if(ex){
