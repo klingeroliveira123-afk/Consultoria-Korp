@@ -192,41 +192,44 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .ex-card .ex-how{padding:8px 16px;font-size:13px;color:#1d6fb8;background:#f0f7ff;border-bottom:1.5px solid #dbeafe}
 .ex-series-wrap{padding:8px 14px 12px}
 
-/* ===== SERIE CARD ===== */
-.serie-card{margin:8px 0;background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;overflow:hidden;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+/* ===== SERIE CARD v7 — sequencial ===== */
+.serie-card{margin:6px 0;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;overflow:hidden;transition:.2s}
 .serie-card.active{border-color:var(--accent);box-shadow:0 2px 10px rgba(232,40,26,.12)}
 .serie-card.completed{border-color:#16a34a;background:#f0fdf4}
-/* linha de inputs */
 .sc-head{display:flex;align-items:center;gap:8px;padding:10px 12px}
 .sc-num{width:28px;height:28px;border-radius:50%;background:#f3f4f6;border:1.5px solid #d1d5db;display:grid;place-items:center;font-weight:800;font-size:13px;color:#6b7280;flex:none}
 .serie-card.active .sc-num{background:var(--accent);border-color:var(--accent);color:#fff}
 .serie-card.completed .sc-num{background:#16a34a;border-color:#16a34a;color:#fff}
 .sc-inputs{display:flex;gap:6px;flex:1}
 .sc-field{display:flex;flex-direction:column;gap:2px;flex:1}
-.sc-field label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;font-weight:700}
+.sc-field label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;font-weight:700}
 .sc-numfield{display:flex;align-items:center;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:9px;overflow:hidden}
-.sc-numfield button{border:none;background:transparent;color:var(--accent);font-size:18px;font-weight:700;width:32px;height:38px;flex:none;display:grid;place-items:center;cursor:pointer}
+.sc-numfield button{border:none;background:transparent;color:var(--accent);font-size:20px;font-weight:700;width:34px;height:42px;flex:none;display:grid;place-items:center;cursor:pointer}
 .sc-numfield button:active{background:#fef2f2}
-.sc-numfield input{border:none;background:transparent;color:#111827;font-family:var(--mono);font-size:16px;font-weight:800;text-align:center;flex:1;min-width:0;height:38px;padding:0;outline:none}
+.sc-numfield input{border:none;background:transparent;color:#111;font-family:var(--mono);font-size:17px;font-weight:800;text-align:center;flex:1;min-width:0;height:42px;padding:0;outline:none}
 .sc-numfield input::-webkit-outer-spin-button,.sc-numfield input::-webkit-inner-spin-button{-webkit-appearance:none}
-/* PSE scroll horizontal */
-.pse-section{padding:8px 12px 4px;border-top:1px solid #f3f4f6}
-.serie-card.completed .pse-section{display:none}
-.pse-label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;font-weight:700;margin-bottom:6px}
-.pse-scroll{display:flex;gap:5px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
-.pse-scroll::-webkit-scrollbar{display:none}
-.pse-btn{border:1.5px solid #e5e7eb;background:#f9fafb;border-radius:9px;padding:8px 0;font-size:15px;font-weight:800;text-align:center;flex:none;width:44px;cursor:pointer;color:#374151;transition:.12s}
+/* PSE grade */
+.pse-section{padding:8px 12px 6px;border-top:1px solid #f3f4f6}
+.pse-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;font-weight:700;margin-bottom:7px}
+.pse-grid-row{display:grid;gap:5px;margin-bottom:5px}
+.pse-grid-row.row6{grid-template-columns:repeat(6,1fr)}
+.pse-grid-row.row5{grid-template-columns:repeat(5,1fr)}
+.pse-btn{border:1.5px solid #e5e7eb;background:#f9fafb;border-radius:9px;padding:10px 0;font-size:16px;font-weight:800;text-align:center;cursor:pointer;color:#374151;transition:.12s}
 .pse-btn:active{transform:scale(.88)}
-.pse-btn.on{color:#fff;transform:scale(1.08);box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.pse-btn.on{color:#fff;transform:scale(1.06)}
 .pse-0{--pc:#9ca3af}.pse-1{--pc:#60a5fa}.pse-2{--pc:#34d399}.pse-3{--pc:#4ade80}.pse-4{--pc:#a3e635}.pse-5{--pc:#fbbf24}.pse-6{--pc:#fb923c}.pse-7{--pc:#f97316}.pse-8{--pc:#ef4444}.pse-9{--pc:#dc2626}.pse-10{--pc:#991b1b}
 .pse-btn.on{background:var(--pc);border-color:var(--pc)}
-/* botão concluir — largura total abaixo */
+/* botão concluir */
 .conclude-section{padding:8px 12px 12px}
-.conclude-btn{width:100%;border:none;border-radius:10px;padding:13px;font-weight:800;font-size:16px;background:#f3f4f6;color:#9ca3af;cursor:default;transition:.15s}
-.conclude-btn.ready{background:var(--accent);color:#fff;cursor:pointer;box-shadow:0 3px 10px rgba(232,40,26,.3)}
+.conclude-btn{width:100%;border:none;border-radius:10px;padding:14px;font-weight:800;font-size:16px;background:#f3f4f6;color:#9ca3af;cursor:default;transition:.15s}
+.conclude-btn.ready{background:var(--accent);color:#fff;cursor:pointer}
 .conclude-btn.ready:active{background:#c0201a}
-.serie-card.completed .conclude-section{display:none}
-/* ícone sc-check — não usado mais */
+/* rest inline — timer entre séries */
+.rest-inline{margin:6px 0;background:#fffbeb;border:2px solid #f59e0b;border-radius:12px;padding:14px 16px;text-align:center}
+.rest-inline .ri-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#d97706;font-weight:700;margin-bottom:6px}
+.rest-inline .ri-val{font-family:var(--mono);font-size:48px;font-weight:800;color:#d97706;line-height:1}
+.rest-inline .ri-msg{font-size:13px;color:#92400e;margin-top:6px}
+.rest-inline .ri-skip{display:inline-block;margin-top:10px;background:#fff;border:1px solid #fde68a;border-radius:8px;padding:7px 16px;font-size:13px;color:#92400e;font-weight:700;cursor:pointer}
 .sc-check{display:none}
 
 /* rest overlay */
@@ -852,66 +855,96 @@ function coachDayHTML(w,d,prev){
 }
 
 // ALUNO day html
+// cores PSE por intensidade
+const PSE_COLORS=["#9ca3af","#60a5fa","#34d399","#4ade80","#a3e635","#fbbf24","#fb923c","#f97316","#ef4444","#dc2626","#991b1b"];
+
+function serieCardHTML(ex,i,state){
+  // state: "active"|"completed"|"resting"|"locked"
+  const sr=ex.seriesLog?.[i]||{};
+  const defW=numOrBlank(ex.weight)||"";
+  const defR=numOrBlank(ex.reps)||"";
+  const wVal=sr.weight!=null?sr.weight:defW;
+  const rVal=sr.reps!=null?sr.reps:defR;
+  if(state==="completed"){
+    return`<div class="serie-card completed" id="sc_${ex.id}_${i}">
+      <div class="sc-head">
+        <div class="sc-num" style="font-size:14px">✓</div>
+        <div style="flex:1;font-size:15px;font-weight:800;color:#15803d">Série ${i+1} · ${sr.weight||ex.weight||"—"} kg × ${sr.reps||ex.reps||"—"} reps</div>
+        <div style="background:${PSE_COLORS[sr.pse]||'#ccc'};color:#fff;border-radius:7px;padding:3px 9px;font-weight:800;font-size:13px">PSE ${sr.pse!=null?sr.pse:"—"}</div>
+      </div>
+    </div>`;
+  }
+  if(state==="resting"){
+    return`<div class="rest-inline" id="sc_${ex.id}_${i}">
+      <div class="ri-lbl">Descanse antes da próxima série</div>
+      <div class="ri-val" id="ri_${ex.id}_${i}">—</div>
+      <div class="ri-msg">A próxima série aparece quando acabar</div>
+      <div class="ri-skip" data-skipr="${ex.id}" data-si="${i}">Pular descanso →</div>
+    </div>`;
+  }
+  if(state==="locked"){
+    return`<div style="display:none" id="sc_${ex.id}_${i}"></div>`;
+  }
+  // active
+  const hasPSE=sr.pse!=null;
+  const pseRow1=PSE_LABELS.slice(0,6).map(p=>{
+    const on=hasPSE&&sr.pse==parseInt(p);
+    return`<button class="pse-btn pse-${p}${on?" on":""}" data-ex="${ex.id}" data-si="${i}" data-pse="${p}">${p}</button>`;
+  }).join("");
+  const pseRow2=PSE_LABELS.slice(6).map(p=>{
+    const on=hasPSE&&sr.pse==parseInt(p);
+    return`<button class="pse-btn pse-${p}${on?" on":""}" data-ex="${ex.id}" data-si="${i}" data-pse="${p}">${p}</button>`;
+  }).join("");
+  return`<div class="serie-card active" id="sc_${ex.id}_${i}">
+    <div class="sc-head">
+      <div class="sc-num">${i+1}</div>
+      <div class="sc-inputs">
+        <div class="sc-field">
+          <label>Carga (kg)</label>
+          <div class="sc-numfield">
+            <button data-step="-0.5" data-ex="${ex.id}" data-si="${i}" data-field="weight">−</button>
+            <input type="number" class="s-weight" data-ex="${ex.id}" data-si="${i}" value="${wVal}" step="0.5" inputmode="decimal">
+            <button data-step="+0.5" data-ex="${ex.id}" data-si="${i}" data-field="weight">+</button>
+          </div>
+        </div>
+        <div class="sc-field">
+          <label>Repetições</label>
+          <div class="sc-numfield">
+            <button data-step="-1" data-ex="${ex.id}" data-si="${i}" data-field="reps">−</button>
+            <input type="number" class="s-reps" data-ex="${ex.id}" data-si="${i}" value="${rVal}" step="1" inputmode="numeric">
+            <button data-step="+1" data-ex="${ex.id}" data-si="${i}" data-field="reps">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pse-section">
+      <div class="pse-label">Esforço percebido (PSE 0–10)</div>
+      <div class="pse-grid-row row6">${pseRow1}</div>
+      <div class="pse-grid-row row5">${pseRow2}</div>
+    </div>
+    <div class="conclude-section">
+      <button class="conclude-btn${hasPSE?" ready":""}" data-ex="${ex.id}" data-si="${i}" ${hasPSE?"":"disabled"}>
+        ${hasPSE?"✓ Concluir série — iniciar descanso":"← Selecione o esforço acima"}
+      </button>
+    </div>
+  </div>`;
+}
+
+function getSerieState(ex,i){
+  const sr=ex.seriesLog?.[i]||{};
+  if(sr.done)return"completed";
+  if(sr.resting)return"resting";
+  // verifica se série anterior foi concluída
+  if(i===0)return"active";
+  const prev=ex.seriesLog?.[i-1]||{};
+  if(prev.done&&!prev.resting)return"active";
+  return"locked";
+}
+
 function alunoDayHTML(d,dayIdx){
-  const colors=["#9ca3af","#60a5fa","#34d399","#34d399","#a3e635","#fbbf24","#fb923c","#f97316","#ef4444","#dc2626","#991b1b"];
   const exCards=d.exercises.map((ex,exIdx)=>{
     const nSets=parseInt(ex.sets)||3;
-    const defW=numOrBlank(ex.weight)||0;
-    const defR=numOrBlank(ex.reps)||0;
-    const seriesCards=Array.from({length:nSets},(_,i)=>{
-      const sr=ex.seriesLog?.[i]||{};
-      const isCompleted=!!sr.done;
-      const hasPSE=sr.pse!=null;
-      const wVal=sr.weight!=null?sr.weight:(defW||"");
-      const rVal=sr.reps!=null?sr.reps:(defR||"");
-      if(isCompleted){
-        return`<div class="serie-card completed" id="sc_${ex.id}_${i}">
-          <div class="sc-head">
-            <div class="sc-num">✓</div>
-            <div style="flex:1">
-              <div style="font-size:16px;color:var(--good);font-weight:800">${sr.weight||ex.weight||"—"} kg &nbsp;×&nbsp; ${sr.reps||ex.reps||"—"} reps</div>
-            </div>
-            <div style="background:${colors[sr.pse]||'#ccc'};color:#fff;border-radius:8px;padding:4px 10px;font-weight:800;font-size:13px">PSE ${sr.pse!=null?sr.pse:"—"}</div>
-          </div>
-        </div>`;
-      }
-      const pseRow=PSE_LABELS.map(p=>{
-        const on=hasPSE&&sr.pse==parseInt(p);
-        return`<button class="pse-btn pse-${p} ${on?"on":""}" data-ex="${ex.id}" data-si="${i}" data-pse="${p}">${p}</button>`;
-      }).join("");
-      return`<div class="serie-card ${hasPSE?"active":""}" id="sc_${ex.id}_${i}">
-        <div class="sc-head">
-          <div class="sc-num">${i+1}</div>
-          <div class="sc-inputs">
-            <div class="sc-field">
-              <label>Carga (kg)</label>
-              <div class="sc-numfield">
-                <button data-step="-0.5" data-ex="${ex.id}" data-si="${i}" data-field="weight">−</button>
-                <input type="number" class="s-weight" data-ex="${ex.id}" data-si="${i}" value="${wVal}" step="0.5" inputmode="decimal">
-                <button data-step="+0.5" data-ex="${ex.id}" data-si="${i}" data-field="weight">+</button>
-              </div>
-            </div>
-            <div class="sc-field">
-              <label>Repetições</label>
-              <div class="sc-numfield">
-                <button data-step="-1" data-ex="${ex.id}" data-si="${i}" data-field="reps">−</button>
-                <input type="number" class="s-reps" data-ex="${ex.id}" data-si="${i}" value="${rVal}" step="1" inputmode="numeric">
-                <button data-step="+1" data-ex="${ex.id}" data-si="${i}" data-field="reps">+</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="pse-section">
-          <div class="pse-label">Como foi o esforço? (PSE 0–10)</div>
-          <div class="pse-scroll">${pseRow}</div>
-        </div>
-        <div class="conclude-section">
-          <button class="conclude-btn ${hasPSE?"ready":""}" data-ex="${ex.id}" data-si="${i}" ${hasPSE?"":"disabled"}>
-            ${hasPSE?"✓ Concluir série — iniciar descanso":"← Selecione o esforço acima"}
-          </button>
-        </div>
-      </div>`;
-    }).join("");
+    const seriesCards=Array.from({length:nSets},(_,i)=>serieCardHTML(ex,i,getSerieState(ex,i))).join("");
     const restPill=ex.rest?`<span class="ex-pill accent-pill">⏱ ${ex.rest}s descanso</span>`:"";
     const musclePill=ex.muscle?`<span class="ex-pill">🏋 ${esc(ex.muscle)}</span>`:"";
     return`<div class="ex-card">
@@ -956,43 +989,76 @@ document.addEventListener("visibilitychange",()=>{
     // reinicia interval se parou
     if(!_globalSessionTimer)startSessionTimerDisplay();
     // verifica se tinha timer de descanso rodando
-    if(ui.restEndTime){
+    if(ui.restEndTime&&ui.restExId!=null){
       const remaining=Math.ceil((ui.restEndTime-Date.now())/1000);
       if(remaining<=0){
-        // descanso já acabou enquanto estava fora
-        const overlay=document.getElementById("restOverlay");
-        const circle=document.getElementById("restCircle");
-        const val=document.getElementById("restVal");
-        const msg=document.getElementById("restMsg");
-        if(overlay){val.textContent="GO!";msg.textContent="Volte! Hora da próxima série!";
-          circle.classList.add("done-circle");overlay.classList.add("open");
-          if("vibrate" in navigator)navigator.vibrate([400,100,400]);
-          setTimeout(()=>overlay.classList.remove("open"),3000);}
+        clearInterval(ui.restTimerInterval);ui.restEndTime=null;
+        if("vibrate" in navigator)navigator.vibrate([400,100,400]);
+        unlockNextSerie(ui.restExId,ui.restSi);
       }else{
-        startRestTimer(remaining);
+        startRestTimer(remaining,ui.restExId,ui.restSi);
       }
     }
   }
 });
 
-// rest overlay timer
-function startRestTimer(restSecs){
+// rest timer — inline no card, desbloqueia próxima série ao terminar
+function startRestTimer(restSecs,exId,si){
   clearInterval(ui.restTimerInterval);
-  const overlay=$("#restOverlay"),circle=$("#restCircle"),val=$("#restVal"),msg=$("#restMsg");
-  if(!restSecs||restSecs<=0)return;
-  let remaining=parseInt(restSecs);
-  ui.restEndTime=Date.now()+(remaining*1000); // salva timestamp para recuperar ao voltar
-  val.textContent=fmtTime(remaining);msg.textContent="Descanse…";circle.classList.remove("done-circle");overlay.classList.add("open");
-  ui.restTimerInterval=setInterval(()=>{
-    remaining=Math.ceil((ui.restEndTime-Date.now())/1000);
+  if(!restSecs||restSecs<=0){unlockNextSerie(exId,si);return;}
+  ui.restEndTime=Date.now()+(parseInt(restSecs)*1000);
+  ui.restExId=exId;ui.restSi=si;
+  const tick=()=>{
+    const remaining=Math.ceil((ui.restEndTime-Date.now())/1000);
+    const el=document.getElementById(`ri_${exId}_${si}`);
+    if(el)el.textContent=fmtTime(Math.max(0,remaining));
     if(remaining<=0){
       clearInterval(ui.restTimerInterval);ui.restEndTime=null;
-      val.textContent="GO!";msg.textContent="Próxima série!";circle.classList.add("done-circle");
       if("vibrate" in navigator)navigator.vibrate([300,100,300,100,500]);
-      toast("⏰ Descansou! Hora da próxima série.","good");
-      setTimeout(()=>overlay.classList.remove("open"),2500);
-    }else{val.textContent=fmtTime(remaining);}
-  },1000);
+      unlockNextSerie(exId,si);
+    }
+  };
+  tick();
+  ui.restTimerInterval=setInterval(tick,1000);
+}
+
+function unlockNextSerie(exId,si){
+  // marca que o descanso acabou
+  const w=findWeek(ui.selWeek);
+  const d=w?.days.find(d=>d.exercises.some(e=>e.id===exId));
+  const ex=d?.exercises.find(e=>e.id===exId);
+  if(!ex)return;
+  if(!ex.seriesLog)ex.seriesLog=[];
+  if(!ex.seriesLog[si])ex.seriesLog[si]={};
+  ex.seriesLog[si].resting=false;
+  const nSets=parseInt(ex.sets)||3;
+  const nextSi=si+1;
+  // substitui o card de descanso pelo card concluído + próxima série
+  const restEl=document.getElementById(`sc_${exId}_${si}`);
+  if(restEl){restEl.outerHTML=serieCardHTML(ex,si,"completed");}
+  if(nextSi<nSets){
+    // insere próxima série
+    const wrap=document.querySelector(`.ex-series-wrap`);
+    // encontra o wrap do exercício correto
+    const allWraps=document.querySelectorAll(".ex-series-wrap");
+    const exIdx=d.exercises.findIndex(e=>e.id===exId);
+    const myWrap=allWraps[exIdx];
+    if(myWrap){
+      const nextEl=document.getElementById(`sc_${exId}_${nextSi}`);
+      if(nextEl){nextEl.outerHTML=serieCardHTML(ex,nextSi,"active");}
+    }
+  }
+  toast("⏰ Descansou! Próxima série liberada.","good");
+  // scroll suave para a próxima série
+  setTimeout(()=>{
+    const next=document.getElementById(`sc_${exId}_${nextSi}`);
+    if(next)next.scrollIntoView({behavior:"smooth",block:"center"});
+  },200);
+}
+
+function skipRest(exId,si){
+  clearInterval(ui.restTimerInterval);ui.restEndTime=null;
+  unlockNextSerie(exId,si);
 }
 
 // PSE de sessão modal
@@ -1428,37 +1494,40 @@ document.addEventListener("click",e=>{
       ex.seriesLog[si].pse=val;
       // update PSE buttons visually
       if(sc){
-        sc.querySelectorAll(".pse-btn").forEach(b=>b.classList.toggle("on",parseInt(b.dataset.pse)===val));
+        sc.querySelectorAll(".pse-btn").forEach(b=>{
+          const on=parseInt(b.dataset.pse)===val;
+          b.classList.toggle("on",on);
+          b.style.background=on?PSE_COLORS[val]:"";
+          b.style.borderColor=on?PSE_COLORS[val]:"";
+          b.style.color=on?"#fff":"";
+        });
         const cb=sc.querySelector(".conclude-btn");
-        if(cb){
-          cb.disabled=false;
-          cb.classList.add("ready");
-          cb.textContent="✓ Concluir série — iniciar descanso";
-        }
-        sc.classList.add("active");
+        if(cb){cb.disabled=false;cb.classList.add("ready");cb.textContent="✓ Concluir série — iniciar descanso";}
       }
     }return;}
 
   // conclude button
-  const done=t.closest(".conclude-btn,.sc-check");if(done&&!done.disabled){
+  // pular descanso
+  const skipr=t.closest("[data-skipr]");if(skipr){skipRest(skipr.dataset.skipr,parseInt(skipr.dataset.si));return;}
+
+  const done=t.closest(".conclude-btn");if(done&&!done.disabled){
     const exId=done.dataset.ex,si=parseInt(done.dataset.si);
     const w=findWeek(ui.selWeek);const d=w?.days.find(d=>d.exercises.some(e=>e.id===exId));const ex=d?.exercises.find(e=>e.id===exId);
     if(ex){
       if(!ex.seriesLog)ex.seriesLog=[];
       if(!ex.seriesLog[si])ex.seriesLog[si]={};
+      const sc=document.getElementById(`sc_${exId}_${si}`);
+      const wi=sc?.querySelector(".s-weight");const ri=sc?.querySelector(".s-reps");
+      if(wi?.value)ex.seriesLog[si].weight=parseFloat(wi.value);
+      if(ri?.value)ex.seriesLog[si].reps=parseInt(ri.value);
       ex.seriesLog[si].done=true;
-      // ensure session timer running
-      if(!ui.sessionStart){
-        ui.sessionStart=Date.now();
-        ui.sessionWeekId=ui.selWeek;
-        ui.sessionDayCode=d.code;
-        startSessionTimerDisplay();
-      }
-      startRestTimer(parseInt(ex.rest)||0);
+      ex.seriesLog[si].resting=true;
+      if(!ui.sessionStart){ui.sessionStart=Date.now();ui.sessionWeekId=ui.selWeek;ui.sessionDayCode=d.code;startSessionTimerDisplay();}
+      // substituir card ativo pelo timer inline
+      const nSets=parseInt(ex.sets)||3;
+      if(sc){sc.outerHTML=serieCardHTML(ex,si,"resting");}
+      startRestTimer(parseInt(ex.rest)||0,exId,si);
       if(isStudent)saveStudentSessionData();
-      // re-render just the day
-      const dayEl=$("#alunoday");
-      if(dayEl){const curd=w.days[ui.curDay];if(curd)dayEl.innerHTML=alunoDayHTML(curd,ui.curDay);}
     }return;}
 
   // avaliações
