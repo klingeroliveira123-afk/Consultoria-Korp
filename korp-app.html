@@ -935,8 +935,11 @@ function serieCardHTML(ex,i,state){
     return`<div class="serie-card completed" id="sc_${ex.id}_${i}">
       <div class="sc-head">
         <div class="sc-num" style="font-size:14px">✓</div>
-        <div style="flex:1;font-size:15px;font-weight:800;color:#15803d">Série ${i+1} · ${sr.weight||ex.weight||"—"} kg × ${sr.reps||ex.reps||"—"} reps</div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:800;color:#15803d">Série ${i+1} · ${sr.weight||ex.weight||"—"} kg × ${sr.reps||ex.reps||"—"} reps</div>
+        </div>
         <div style="background:${PSE_COLORS[sr.pse]||'#ccc'};color:#fff;border-radius:7px;padding:3px 9px;font-weight:800;font-size:13px">PSE ${sr.pse!=null?sr.pse:"—"}</div>
+        <button data-editserie="${ex.id}" data-si="${i}" style="border:1px solid #d1d5db;background:#f9fafb;border-radius:8px;padding:4px 10px;font-size:12px;color:#6b7280;font-weight:600;margin-left:6px;cursor:pointer">✎ Editar</button>
       </div>
     </div>`;
   }
@@ -1706,11 +1709,23 @@ document.addEventListener("click",e=>{
           b.style.color=on?"#fff":"";
         });
         const cb=sc.querySelector(".conclude-btn");
-        if(cb){cb.disabled=false;cb.classList.add("ready");cb.textContent="✓ Concluir série — iniciar descanso";}
+        if(cb){cb.disabled=false;cb.classList.add("ready");cb.textContent=`✓ Concluir — PSE ${val} selecionada`;
+          cb.style.background=PSE_COLORS[val]||"var(--accent)";cb.style.borderColor=PSE_COLORS[val]||"var(--accent)";}
       }
     }return;}
 
   // conclude button
+  // editar série concluída
+  const editserie=t.closest("[data-editserie]");if(editserie){
+    const exId=editserie.dataset.editserie,si=parseInt(editserie.dataset.si);
+    const w=findWeek(ui.selWeek);const d=w?.days.find(d=>d.exercises.some(e=>e.id===exId));const ex=d?.exercises.find(e=>e.id===exId);
+    if(ex&&ex.seriesLog?.[si]){
+      ex.seriesLog[si].done=false;ex.seriesLog[si].resting=false;
+      const sc=document.getElementById(`sc_${exId}_${si}`);
+      if(sc)sc.outerHTML=serieCardHTML(ex,si,"active");
+      toast("Série reaberta para edição","good");
+    }return;}
+
   // pular descanso
   const skipr=t.closest("[data-skipr]");if(skipr){skipRest(skipr.dataset.skipr,parseInt(skipr.dataset.si));return;}
 
