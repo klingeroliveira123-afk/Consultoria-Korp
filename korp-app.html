@@ -671,7 +671,9 @@ async function bootStudent(token){
   const{data,error}=await sb.rpc("get_student_snapshot",{p_token:token});
   if(error||!data||!data.length)return gate(`<div class="gate-card"><div class="gate-logo">C</div><h1>Link inválido</h1><p class="lead">Confira o link com seu treinador.</p></div>`);
   const row=data[0],pub=row.pub||{};
-  state={meta:{coachName:row.coach_name||"Consultoria",clientSnapshot:true},students:[{id:row.id,name:row.name,sex:pub.sex||"2",age:pub.age||"",goal:pub.goal||"",weeks:pub.weeks||[],assessments:pub.assessments||[],sessions:pub.sessions||[],access_token:token,active:true}]};
+  // sessions: prioriza pub.sessions (mais recente, salvo pelo aluno)
+  const stuSessions=(pub.sessions||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  state={meta:{coachName:row.coach_name||"Consultoria",clientSnapshot:true},students:[{id:row.id,name:row.name,sex:pub.sex||"2",age:pub.age||"",goal:pub.goal||"",weeks:pub.weeks||[],assessments:pub.assessments||[],sessions:stuSessions,access_token:token,active:true}]};
   ui.mode="aluno";ui.curStudent=state.students[0].id;ui.view="workspace";ui.tab="treino";
   closeGate();applyMode();renderBrand();renderView();
 }
@@ -912,13 +914,18 @@ function alunoDayTabsHTML(wk){
         <span class="val" id="sessionTimerDisplay_${wk.id}">${sessionRunning?fmtTime(Math.floor((Date.now()-ui.sessionStart)/1000)):"00:00"}</span>
       </div>
       <div style="flex:1"></div>
-      ${!sessionRunning?`<button class="btn good" data-startsess="${wk.id}" style="flex:none">▶ Iniciar</button>`
-        :`<button class="btn ghost" data-endsess="${wk.id}" style="flex:none;border-color:var(--accent);color:var(--accent)">■ Finalizar</button>`}
+
     </div>
   </div>`;
   function dayProgress(d){let done=0,total=0;d.exercises.forEach(ex=>{const n=parseInt(ex.sets)||3;total+=n;for(let i=0;i<n;i++){if(ex.seriesLog?.[i]?.done)done++;}});return{done,total};}
   const tabs=wk.days.map((dd,i)=>{const{done,total}=dayProgress(dd);return`<button class="day-tab ${i===dayIdx?"on":""}" data-daytab="${i}" data-tabweek="${wk.id}"><span class="tab-code">${esc(dd.code)}</span><span style="font-size:11px">${esc(dd.title||"")}</span>${total>0?`<span class="tab-prog">${done}/${total}</span>`:""}</button>`;}).join("");
-  return sessBar+`<div class="day-tabs">${tabs}</div><div id="alunoday_${wk.id}">${alunoDayHTML(d,dayIdx)}</div>`;
+  const startBtn=!sessionRunning
+    ?`<button class="btn good" data-startsess="${wk.id}" style="width:100%;justify-content:center;padding:16px;font-size:17px;border-radius:14px;margin-bottom:14px">▶ Iniciar sessão de treino</button>`
+    :"";
+  const endBtn=sessionRunning
+    ?`<button data-endsess="${wk.id}" style="width:100%;padding:16px;font-size:17px;font-weight:800;border:2px solid #e8281a;background:#fdf0ef;color:#e8281a;border-radius:14px;margin-top:16px;cursor:pointer">■ Finalizar sessão</button>`
+    :"";
+  return sessBar+startBtn+`<div class="day-tabs">${tabs}</div><div id="alunoday_${wk.id}">${alunoDayHTML(d,dayIdx)}</div>`+endBtn;
 }
 
 // cores PSE por intensidade
@@ -1193,11 +1200,10 @@ async function finishSession(weekId,dayCode,sessionPSE){
   s.sessions.push(session);
   ui.sessionStart=null;
   if(isStudent){
-    if(sb&&s.access_token){
-      const{data:row}=await sb.rpc("get_student_snapshot",{p_token:s.access_token});
-      if(row?.length){const newPub={...row[0].pub,sessions:s.sessions};await sb.from("students").update({pub:newPub,updated_at:new Date().toISOString()}).eq("id",row[0].id);}
-    }
-  }else{await saveStudent(s);}
+    await saveStudentData(s);
+  }else{
+    await saveStudent(s);
+  }
   sendToSheets(s,session);
   toast(`Sessão registrada! ${durationMin} min · VL: ${Math.round(totalVL)} kg${sessionPSE!=null?" · PSE: "+sessionPSE:""}·TRIMP: ${trimpScore||"—"}`,"good");
   renderWeekEditor();
@@ -1237,11 +1243,14 @@ function sheetsModal(){
 // dashboard
 async function reloadStudentFromCloud(){
   const s=cur();if(!s||!sb||!session)return;
-  const{data,error}=await sb.from("students").select("*").eq("id",s.id).single();
-  if(error||!data)return;
-  const updated=rowToStudent(data);
-  const idx=state.students.findIndex(x=>x.id===s.id);
-  if(idx>=0)state.students[idx]=updated;
+  try{
+    const{data,error}=await sb.from("students").select("*").eq("id",s.id).single();
+    if(error||!data)return;
+    const updated=rowToStudent(data);
+    const idx=state.students.findIndex(x=>x.id===s.id);
+    if(idx>=0)state.students[idx]=updated;
+    console.log("reload: sessões do aluno",updated.name,":",updated.sessions?.length);
+  }catch(e){console.error("reloadStudentFromCloud error",e);}
 }
 
 function renderDashboard(){
@@ -1746,7 +1755,7 @@ document.addEventListener("click",e=>{
       const nSets=parseInt(ex.sets)||3;
       if(sc){sc.outerHTML=serieCardHTML(ex,si,"resting");}
       startRestTimer(parseInt(ex.rest)||0,exId,si);
-      if(isStudent)saveStudentSessionData();
+      if(isStudent)saveStudentData(cur()).catch(e=>console.error('save series error',e));
     }return;}
 
   // avaliações
@@ -1758,13 +1767,35 @@ document.addEventListener("click",e=>{
 });
 
 // save aluno session data to cloud
+// salva dados do aluno via token (usado quando isStudent=true)
+async function saveStudentData(s){
+  if(!sb||!s?.access_token)return;
+  try{
+    // busca o ID real do aluno no banco usando o token
+    const{data:row,error}=await sb.rpc("get_student_snapshot",{p_token:s.access_token});
+    if(error||!row?.length){console.error("saveStudentData: aluno não encontrado",error);return;}
+    const sid=row[0].id;
+    // monta o pub com TODOS os dados atuais do state (não mistura com pub antigo)
+    const newPub={
+      name:s.name,sex:s.sex,age:s.age,goal:s.goal,
+      coachName:row[0].pub?.coachName||"Consultoria",
+      weeks:s.weeks,
+      assessments:s.assessments||[],
+      sessions:s.sessions||[]
+    };
+    const{error:upErr}=await sb.from("students").update({
+      pub:newPub,
+      updated_at:new Date().toISOString()
+    }).eq("id",sid);
+    if(upErr){console.error("saveStudentData: erro ao salvar",upErr);}
+    else{console.log("saveStudentData: salvo OK, sessões:",s.sessions?.length);}
+  }catch(e){console.error("saveStudentData exception:",e);}
+}
+
+// alias para compatibilidade
 async function saveStudentSessionData(){
-  const s=cur();if(!s||!sb||!s.access_token)return;
-  const{data:row}=await sb.rpc("get_student_snapshot",{p_token:s.access_token});
-  if(!row?.length)return;
-  const sid=row[0].id;
-  const newPub={...row[0].pub,weeks:s.weeks,sessions:s.sessions||[]};
-  await sb.from("students").update({pub:newPub,updated_at:new Date().toISOString()}).eq("id",sid);
+  const s=cur();
+  await saveStudentData(s);
 }
 
 document.addEventListener("change",e=>{
