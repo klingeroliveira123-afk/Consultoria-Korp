@@ -439,6 +439,7 @@ body.mode-aluno #weekEditor{border:none;background:transparent;box-shadow:none}
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
     <h2 style="font-family:var(--disp);font-size:22px;font-weight:700;letter-spacing:-.02em">Dashboard de Treino</h2>
     <span class="pill" id="dashSpan">—</span>
+    <button class="btn sm ghost" id="dashRefresh" onclick="reloadStudentFromCloud().then(()=>renderDashboard())" style="font-size:12px">↻ Atualizar</button>
     <div class="spacer"></div>
     <select id="dashRange" style="background:var(--bg2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 10px;font-size:13px">
       <option value="7">7 dias</option>
@@ -542,8 +543,8 @@ function bodyComp(a){
 function cacheLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){}}
 function markDirty(){dirty=true;renderSaveState();cacheLocal();if(isStudent)return;clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStudent(cur()),900);}
 function renderSaveState(){const el=$("#saveState");if(el)el.innerHTML=dirty?"<b>salvando…</b>":"☁ salvo";}
-function pubOf(s){return{name:s.name,sex:s.sex,age:s.age,goal:s.goal,coachName:state.meta.coachName,weeks:s.weeks.filter(w=>w.status==="publicado"),assessments:s.assessments};}
-function rowToStudent(r){const d=r.data||{};return{id:r.id,name:r.name,sex:r.sex||"2",age:r.age||"",goal:r.goal||"",startDate:r.start_date||"",active:r.active!==false,access_token:r.access_token,weeks:d.weeks||[],assessments:d.assessments||[],sessions:d.sessions||[]};}
+function pubOf(s){return{name:s.name,sex:s.sex,age:s.age,goal:s.goal,coachName:state.meta.coachName,weeks:s.weeks.filter(w=>w.status==="publicado"),assessments:s.assessments,sessions:s.sessions||[]};}
+function rowToStudent(r){const d=r.data||{};const pub=r.pub||{};const sessions=[...(d.sessions||[]),...(pub.sessions||[])].filter((s,i,a)=>a.findIndex(x=>x.id===s.id)===i).sort((a,b)=>a.date?.localeCompare(b.date||'')||0);return{id:r.id,name:r.name,sex:r.sex||"2",age:r.age||"",goal:r.goal||"",startDate:r.start_date||"",active:r.active!==false,access_token:r.access_token,weeks:d.weeks||[],assessments:d.assessments||[],sessions};}
 async function saveStudent(s){
   if(isStudent||!sb||!session||!s)return;
   const{error}=await sb.from("students").update({name:s.name,goal:s.goal,sex:s.sex,age:s.age,start_date:s.startDate||null,active:s.active,data:{weeks:s.weeks,assessments:s.assessments,sessions:s.sessions||[]},pub:pubOf(s),updated_at:new Date().toISOString()}).eq("id",s.id);
@@ -1162,8 +1163,25 @@ function sheetsModal(){
 }
 
 // dashboard
+async function reloadStudentFromCloud(){
+  const s=cur();if(!s||!sb||!session)return;
+  const{data,error}=await sb.from("students").select("*").eq("id",s.id).single();
+  if(error||!data)return;
+  const updated=rowToStudent(data);
+  const idx=state.students.findIndex(x=>x.id===s.id);
+  if(idx>=0)state.students[idx]=updated;
+}
+
 function renderDashboard(){
   const s=cur();if(!s){$("#view-dashboard").innerHTML='<div class="empty"><div class="big">Selecione um aluno</div></div>';return;}
+  // Recarrega dados frescos do Supabase em background
+  reloadStudentFromCloud().then(()=>{
+    const fresh=cur();if(fresh)_renderDashboardData(fresh);
+  });
+  _renderDashboardData(s);
+}
+
+function _renderDashboardData(s){
   const days=parseInt($("#dashRange")?.value||7);
   const cutoff=new Date();cutoff.setDate(cutoff.getDate()-days);
   const sessions=(s.sessions||[]).filter(x=>new Date(x.date)>=cutoff).sort((a,b)=>a.date.localeCompare(b.date));
@@ -1259,7 +1277,7 @@ function renderDashboard(){
     <table class="sessions-table"><thead><tr><th>Grupamento</th><th>Vol. total</th><th>Slope</th><th>Tendência</th></tr></thead><tbody>${regRows||"<tr><td colspan='4' style='color:var(--ink-faint)'>Sem dados por grupamento.</td></tr>"}</tbody></table>
   </div>`:`<div style="color:var(--ink-faint);font-size:13px;margin-bottom:20px;padding:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r)">Regressão linear disponível a partir de 2 semanas com sessões registradas.</div>`;
   // insert before sessions table
-  document.getElementById("view-dashboard").querySelector(".chartbox:last-of-type")?.insertAdjacentHTML?.("afterend",regrBox);
+  try{document.getElementById("view-dashboard").querySelector(".chartbox:last-of-type")?.insertAdjacentHTML?.("afterend",regrBox);}catch(e){}
 
   // sessions table
   const thead=`<thead><tr><th>Data</th><th>Treino</th><th>Duração</th><th>Volume Load</th><th>PSE</th><th>TRIMP</th><th>Músculos</th></tr></thead>`;
@@ -1544,7 +1562,7 @@ async function saveStudentSessionData(){
   const{data:row}=await sb.rpc("get_student_snapshot",{p_token:s.access_token});
   if(!row?.length)return;
   const sid=row[0].id;
-  const newPub={...row[0].pub,weeks:s.weeks};
+  const newPub={...row[0].pub,weeks:s.weeks,sessions:s.sessions||[]};
   await sb.from("students").update({pub:newPub,updated_at:new Date().toISOString()}).eq("id",sid);
 }
 
