@@ -254,6 +254,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:20px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
 .kpi .lab{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint);font-weight:700}
+.kpi[title]{cursor:help}
 .kpi .val{font-family:var(--disp);font-size:32px;font-weight:700;letter-spacing:-.02em;margin-top:4px}
 .kpi .val small{font-size:14px;color:var(--ink-dim)}
 .kpi .ch{font-size:12px;font-weight:600;margin-top:3px}
@@ -357,10 +358,24 @@ body.mode-aluno .aluno-only{display:block}
 body.mode-aluno .panel.side{display:none!important}
 body.mode-aluno .train-grid{grid-template-columns:1fr!important}
 body.mode-aluno #weekEditor{border:none;background:transparent;box-shadow:none}
-.week-picker{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px;scrollbar-width:none}
-.week-picker::-webkit-scrollbar{display:none}
-.week-pill{border:1px solid var(--line);background:var(--bg2);color:var(--ink-dim);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;white-space:nowrap;flex:none;cursor:pointer}
-.week-pill.on{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+.week-picker{display:none}
+.week-pill{display:none}
+/* acordeão de semanas para aluno */
+.week-accordion{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.week-acc-item{background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;overflow:hidden}
+.week-acc-item.open{border-color:var(--accent)}
+.week-acc-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.week-acc-dot{width:10px;height:10px;border-radius:50%;background:#d1d5db;flex:none}
+.week-acc-item.open .week-acc-dot{background:var(--accent)}
+.week-acc-info{flex:1}
+.week-acc-title{font-weight:700;font-size:16px;color:#111}
+.week-acc-sub{font-size:12px;color:#9ca3af;margin-top:2px}
+.week-acc-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#f3f4f6;color:#6b7280;flex:none}
+.week-acc-item.open .week-acc-badge{background:var(--accent-soft);color:var(--accent)}
+.week-acc-arrow{font-size:13px;color:#9ca3af;transition:transform .2s;flex:none}
+.week-acc-item.open .week-acc-arrow{transform:rotate(180deg)}
+.week-acc-body{display:none;border-top:1.5px solid #f3f4f6;padding:14px}
+.week-acc-item.open .week-acc-body{display:block}
 </style>
 </head>
 <body class="mode-coach">
@@ -795,7 +810,31 @@ function renderWeekEditor(){
     daysHtml=`<div class="days">${w.days.map(d=>coachDayHTML(w,d,prev)).join("")}</div>`;
   }else{
     const allWeeks=visibleWeeks();
-    const weekPicker=allWeeks.length>1?`<div class="week-picker">${allWeeks.map(wk=>`<button class="week-pill ${wk.id===ui.selWeek?"on":""}" data-wk="${wk.id}">${esc(wk.label)}</button>`).join("")}</div>`:"";
+    // acordeão de semanas — cada semana é um item expansível
+    const accordion=`<div class="week-accordion">${allWeeks.map(wk=>{
+      const isOpen=wk.id===ui.selWeek;
+      // contar séries concluídas
+      let doneSeries=0,totalSeries=0;
+      wk.days.forEach(d=>d.exercises.forEach(ex=>{
+        const n=parseInt(ex.sets)||3;totalSeries+=n;
+        for(let i=0;i<n;i++){if(ex.seriesLog?.[i]?.done)doneSeries++;}
+      }));
+      const prog=totalSeries>0?`${doneSeries}/${totalSeries} séries`:"";
+      const bodyHtml=isOpen?`<div class="week-acc-body">${alunoDayTabsHTML(wk)}</div>`:`<div class="week-acc-body"></div>`;
+      return`<div class="week-acc-item${isOpen?" open":""}" data-wkacc="${wk.id}">
+        <div class="week-acc-header">
+          <div class="week-acc-dot"></div>
+          <div class="week-acc-info">
+            <div class="week-acc-title">${esc(wk.label)}</div>
+            <div class="week-acc-sub">${fmtDateFull(wk.startDate)} – ${fmtDateFull(wk.endDate)}${wk.note?` · ${esc(wk.note)}`:""}
+            </div>
+          </div>
+          <div class="week-acc-badge">${prog}</div>
+          <div class="week-acc-arrow">▼</div>
+        </div>
+        ${bodyHtml}
+      </div>`;
+    }).join("")}</div>`;
 
     const days=w.days;
     const dayIdx=Math.min(ui.curDay,days.length-1);
@@ -818,7 +857,7 @@ function renderWeekEditor(){
         ${!sessionRunning?`<button class="btn good" id="startSessionBtn" style="flex:none">▶ Iniciar</button>`:`<button class="btn ghost" id="endSessionBtn" style="flex:none;border-color:var(--accent);color:var(--accent)">■ Finalizar</button>`}
       </div>
     </div>`;
-    daysHtml=weekPicker+sessBar+`<div class="day-tabs">${tabs}</div><div id="alunoday">${alunoDayHTML(d,dayIdx)}</div>`;
+    daysHtml=accordion;
   }
   box.innerHTML=head+actions+noteCoach+daysHtml;
   if(!coach&&ui.sessionStart)startSessionTimerDisplay();
@@ -856,6 +895,27 @@ function coachDayHTML(w,d,prev){
 }
 
 // ALUNO day html
+// renderiza conteúdo interno de uma semana no acordeão
+function alunoDayTabsHTML(wk){
+  const dayIdx=ui.curDay||0;
+  const d=wk.days[Math.min(dayIdx,wk.days.length-1)];
+  const sessionRunning=!!ui.sessionStart&&ui.sessionWeekId===wk.id;
+  const sessBar=`<div class="session-header">
+    <div class="top-row">
+      <div class="session-clock">
+        <span class="lbl">Sessão</span>
+        <span class="val" id="sessionTimerDisplay_${wk.id}">${sessionRunning?fmtTime(Math.floor((Date.now()-ui.sessionStart)/1000)):"00:00"}</span>
+      </div>
+      <div style="flex:1"></div>
+      ${!sessionRunning?`<button class="btn good" data-startsess="${wk.id}" style="flex:none">▶ Iniciar</button>`
+        :`<button class="btn ghost" data-endsess="${wk.id}" style="flex:none;border-color:var(--accent);color:var(--accent)">■ Finalizar</button>`}
+    </div>
+  </div>`;
+  function dayProgress(d){let done=0,total=0;d.exercises.forEach(ex=>{const n=parseInt(ex.sets)||3;total+=n;for(let i=0;i<n;i++){if(ex.seriesLog?.[i]?.done)done++;}});return{done,total};}
+  const tabs=wk.days.map((dd,i)=>{const{done,total}=dayProgress(dd);return`<button class="day-tab ${i===dayIdx?"on":""}" data-daytab="${i}" data-tabweek="${wk.id}"><span class="tab-code">${esc(dd.code)}</span><span style="font-size:11px">${esc(dd.title||"")}</span>${total>0?`<span class="tab-prog">${done}/${total}</span>`:""}</button>`;}).join("");
+  return sessBar+`<div class="day-tabs">${tabs}</div><div id="alunoday_${wk.id}">${alunoDayHTML(d,dayIdx)}</div>`;
+}
+
 // cores PSE por intensidade
 const PSE_COLORS=["#9ca3af","#60a5fa","#34d399","#4ade80","#a3e635","#fbbf24","#fb923c","#f97316","#ef4444","#dc2626","#991b1b"];
 
@@ -971,12 +1031,13 @@ function alunoDayHTML(d,dayIdx){
 
 // session timer — global, persiste entre re-renders e recupera ao voltar à tela
 let _globalSessionTimer=null;
-function startSessionTimerDisplay(){
+function startSessionTimerDisplay(wkId){
   if(_globalSessionTimer)return;
   _globalSessionTimer=setInterval(()=>{
     if(!ui.sessionStart){clearInterval(_globalSessionTimer);_globalSessionTimer=null;return;}
-    const el=document.getElementById("sessionTimerDisplay");
-    if(el)el.textContent=fmtTime(Math.floor((Date.now()-ui.sessionStart)/1000));
+    const secs=Math.floor((Date.now()-ui.sessionStart)/1000);
+    // atualiza todos os displays de timer visíveis
+    document.querySelectorAll('[id^="sessionTimerDisplay"]').forEach(el=>el.textContent=fmtTime(secs));
   },1000);
 }
 function stopSessionTimer(){clearInterval(_globalSessionTimer);_globalSessionTimer=null;}
@@ -1191,21 +1252,56 @@ function _renderDashboardData(s){
   const totalVL=sessions.reduce((a,x)=>a+x.totalVolumeLoad,0);
   const avgPSE=sessions.length?+(sessions.reduce((a,x)=>a+(x.sessionPSE||x.avgPSE||0),0)/sessions.length).toFixed(1):null;
   const totalTrimp=sessions.reduce((a,x)=>a+(x.trimpScore||0),0);
-  // monotonia = média / dp
-  const trimp7=sessions.map(x=>x.trimpScore||0);
-  const mean7=trimp7.length?trimp7.reduce((a,b)=>a+b,0)/trimp7.length:0;
-  const sd7=trimp7.length>1?Math.sqrt(trimp7.reduce((a,b)=>a+(b-mean7)**2,0)/trimp7.length):1;
+  // monotonia = média / dp das sessões
+  const trimpVals=sessions.map(x=>x.trimpScore||0);
+  const mean7=trimpVals.length?trimpVals.reduce((a,b)=>a+b,0)/trimpVals.length:0;
+  const sd7=trimpVals.length>1?Math.sqrt(trimpVals.reduce((a,b)=>a+(b-mean7)**2,0)/trimpVals.length):1;
   const monotonia=sd7>0?+(mean7/sd7).toFixed(2):null;
   const strain=monotonia!=null?+(totalTrimp*monotonia).toFixed(0):null;
+  // ACWR: carga aguda (últimos 7d) / carga crônica (últimos 28d)
+  const allSessions=(s.sessions||[]).slice().sort((a,b)=>a.date?.localeCompare(b.date||'')||0);
+  const cut28=new Date();cut28.setDate(cut28.getDate()-28);
+  const sess28=allSessions.filter(x=>new Date(x.date)>=cut28);
+  const chronic28=sess28.reduce((a,x)=>a+(x.trimpScore||0),0)/4; // média semanal 4 semanas
+  const acute7=totalTrimp;
+  const acwr=chronic28>0?+(acute7/chronic28).toFixed(2):null;
+  // variabilidade PSE
+  const pseVals=sessions.map(x=>x.sessionPSE??x.avgPSE).filter(v=>v!=null);
+  const pseMean=pseVals.length?pseVals.reduce((a,b)=>a+b,0)/pseVals.length:null;
+  const pseSD=pseVals.length>1?+(Math.sqrt(pseVals.reduce((a,b)=>a+(b-pseMean)**2,0)/pseVals.length)).toFixed(2):null;
+  // densidade de treino (sessões/semana)
+  const density=sessions.length;
+  // semáforos
+  function semaforo(val,g1,g2,r1,r2,lowerBetter){
+    if(val==null)return"#9ca3af";
+    if(lowerBetter){if(val<=g1)return"#16a34a";if(val<=g2)return"#d97706";return"#dc2626";}
+    if(val>=g1&&val<=g2)return"#16a34a";
+    if(val>=r1&&val<=r2)return"#d97706";
+    return"#dc2626";
+  }
+  const colorACWR=semaforo(acwr,0.8,1.3,0.7,1.5,false);
+  const colorMon=semaforo(monotonia,0,1.5,0,2.0,true);
+  const strainPrev=sess28.length>8?sess28.slice(0,Math.floor(sess28.length/2)).reduce((a,x)=>a+(x.trimpScore||0),0):null;
+  const strainRatio=strainPrev&&strainPrev>0?strain/strainPrev:null;
+  const colorStrain=strainRatio?semaforo(strainRatio,0.9,1.1,0.8,1.3,false):"#9ca3af";
+  const colorPseSD=semaforo(pseSD,0,1.5,0,2.5,true);
 
-  $("#dashKpis").innerHTML=[
-    {lab:"Volume load total",val:totalVL.toLocaleString("pt-BR"),unit:"kg"},
-    {lab:"PSE média",val:avgPSE!=null?avgPSE:"—",unit:"/10"},
-    {lab:"TRIMP total (PSE)",val:totalTrimp||"—",unit:"UA"},
-    {lab:"Monotonia",val:monotonia!=null?monotonia:"—",unit:""},
-    {lab:"Strain",val:strain!=null?strain.toLocaleString("pt-BR"):"—",unit:"UA"},
-    {lab:"Sessões",val:sessions.length,unit:""},
-  ].map(k=>`<div class="kpi"><div class="lab">${k.lab}</div><div class="val">${k.val}<small> ${k.unit}</small></div></div>`).join("");
+  function kpiCard(lab,val,unit,color,tip){
+    const dot=color?`<span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block;margin-right:6px;vertical-align:middle"></span>`:"";
+    return`<div class="kpi" title="${tip||""}"><div class="lab">${dot}${lab}</div><div class="val">${val!=null?val:"—"}<small> ${unit}</small></div></div>`;
+  }
+  const acwrZone=acwr==null?"—":acwr<0.7?"Subtreinamento":acwr<=1.3?"Zona segura":acwr<=1.5?"Atenção":"Risco alto";
+  const monZone=monotonia==null?"—":monotonia<1.5?"Boa variação":monotonia<2?"Atenção":"Alta monotonia";
+  const strainZone=colorStrain==="#16a34a"?"Normal":colorStrain==="#d97706"?"Elevado":"Crítico";
+  $("#dashKpis").innerHTML=
+    kpiCard("Volume Load Total",totalVL.toLocaleString("pt-BR"),"kg",null,"Volume Load = Carga × Reps por série")+
+    kpiCard("PSE Média",avgPSE!=null?avgPSE:"—","/10",null,"Esforço Percebido médio das sessões")+
+    kpiCard("TRIMP Total",totalTrimp||"—","UA",null,"PSE sessão × duração em minutos")+
+    kpiCard(`ACWR ${acwrZone}`,acwr!=null?acwr:"—","",colorACWR,"Razão Aguda:Crônica — zona segura: 0.8–1.3. Acima de 1.5 = risco de lesão")+
+    kpiCard(`Monotonia — ${monZone}`,monotonia!=null?monotonia:"—","",colorMon,"Média TRIMP ÷ DP. Abaixo de 1.5 = boa variação; acima de 2.0 = risco")+
+    kpiCard(`Strain — ${strainZone}`,strain!=null?strain.toLocaleString("pt-BR"):"—","UA",colorStrain,"TRIMP total × Monotonia. Compara com período anterior")+
+    kpiCard("Variab. PSE",pseSD!=null?pseSD:"—","DP",colorPseSD,"Desvio padrão da PSE entre sessões. Alto = instabilidade de recuperação")+
+    kpiCard("Sessões",density,"",null,"Total de sessões no período selecionado");
 
   // charts
   const dts=sessions.map(x=>fmtDate(x.date));
@@ -1483,11 +1579,45 @@ document.addEventListener("click",e=>{
     showSessionPSEModal(ui.selWeek,ui.sessionDayCode||w?.days[0]?.code);
     return;}
 
-  // day tab
-  const dtab=t.closest("[data-daytab]");if(dtab){ui.curDay=parseInt(dtab.dataset.daytab);renderWeekEditor();return;}
+  // acordeão de semanas — expandir/colapsar
+  const wkacc=t.closest("[data-wkacc]");if(wkacc&&!t.closest(".week-acc-body")){
+    const wkId=wkacc.dataset.wkacc;
+    if(ui.selWeek===wkId){
+      // colapsa
+      wkacc.classList.remove("open");
+    } else {
+      // expande e fecha os outros
+      document.querySelectorAll(".week-acc-item.open").forEach(el=>el.classList.remove("open"));
+      wkacc.classList.add("open");
+      ui.selWeek=wkId;ui.curDay=0;
+      // lazy render do body
+      const body=wkacc.querySelector(".week-acc-body");
+      const wkObj=visibleWeeks().find(w=>w.id===wkId);
+      if(body&&wkObj)body.innerHTML=alunoDayTabsHTML(wkObj);
+    }
+    return;}
 
-  // rest overlay skip
-  if(t.closest("#restSkip")){clearInterval(ui.restTimerInterval);$("#restOverlay").classList.remove("open");return;}
+  // start/end session via acordeão
+  const ss=t.closest("[data-startsess]");if(ss){
+    const wkId=ss.dataset.startsess;const wkObj=visibleWeeks().find(w=>w.id===wkId);
+    ui.sessionStart=Date.now();ui.sessionWeekId=wkId;ui.sessionDayCode=wkObj?.days[ui.curDay||0]?.code||wkObj?.days[0]?.code;
+    startSessionTimerDisplay(wkId);
+    // re-render body
+    const body=document.querySelector(`[data-wkacc="${wkId}"] .week-acc-body`);
+    if(body&&wkObj)body.innerHTML=alunoDayTabsHTML(wkObj);
+    return;}
+  const es=t.closest("[data-endsess]");if(es){
+    const wkId=es.dataset.endsess;const wkObj=visibleWeeks().find(w=>w.id===wkId);
+    showSessionPSEModal(wkId,ui.sessionDayCode||wkObj?.days[0]?.code);return;}
+
+  // day tab (dentro do acordeão)
+  const dtab=t.closest("[data-daytab]");if(dtab){
+    ui.curDay=parseInt(dtab.dataset.daytab);
+    const wkId=dtab.dataset.tabweek||ui.selWeek;
+    const wkObj=visibleWeeks().find(w=>w.id===wkId);
+    const body=document.querySelector(`[data-wkacc="${wkId}"] .week-acc-body`);
+    if(body&&wkObj)body.innerHTML=alunoDayTabsHTML(wkObj);
+    return;}
 
   // stepper +/- buttons
   const step=t.closest("[data-step]");if(step){
