@@ -471,6 +471,11 @@ body.mode-aluno #weekEditor{border:none;background:transparent;box-shadow:none}
       <div id="muscleChart" class="muscle-bars"></div>
     </div>
     <div class="chartbox" style="flex:1;min-width:280px">
+      <h4><span class="dot" style="background:#d97706"></span>Índice de Fadiga Muscular</h4>
+      <div style="font-size:11px;color:var(--ink-faint);margin-bottom:10px">VL último treino ÷ média anterior · <span style="color:#16a34a">≥90% normal</span> · <span style="color:#d97706">70–89% atenção</span> · <span style="color:#dc2626">&lt;70% fadiga</span></div>
+      <div id="fatigueChart"></div>
+    </div>
+    <div class="chartbox" style="flex:1;min-width:280px">
       <h4><span class="dot" style="background:var(--warn)"></span>Carga de treino semanal (PSE × min)</h4>
       <svg class="lc" id="trimpChart" viewBox="0 0 300 120" preserveAspectRatio="none"></svg>
     </div>
@@ -1176,7 +1181,10 @@ async function finishSession(weekId,dayCode,sessionPSE){
       if(ex.muscle){muscleVL[ex.muscle]=(muscleVL[ex.muscle]||0)+vl;}
     }
   });
-  const trimpScore=sessionPSE!=null?+(sessionPSE*durationMin).toFixed(0):null;
+  // TRIMP adaptado para força: VL × (PSE/10)
+  const trimpScore=sessionPSE!=null?+(totalVL*(sessionPSE/10)).toFixed(0):null;
+  // manter trimpLegacy para compatibilidade com dados antigos
+  const trimpLegacy=sessionPSE!=null?+(sessionPSE*durationMin).toFixed(0):null;
   const session={id:uid(),date:todayISO(),weekId,dayCode,startTime:new Date(ui.sessionStart).toISOString(),endTime,durationMin,totalVolumeLoad:Math.round(totalVL),muscleVolumeLoad:muscleVL,sessionPSE,trimpScore,exercises:d.exercises.map(ex=>({id:ex.id,name:ex.name,muscle:ex.muscle,seriesLog:ex.seriesLog||[]}))};
   if(!s.sessions)s.sessions=[];
   s.sessions.push(session);
@@ -1250,58 +1258,79 @@ function _renderDashboardData(s){
 
   // KPIs
   const totalVL=sessions.reduce((a,x)=>a+x.totalVolumeLoad,0);
-  const avgPSE=sessions.length?+(sessions.reduce((a,x)=>a+(x.sessionPSE||x.avgPSE||0),0)/sessions.length).toFixed(1):null;
-  const totalTrimp=sessions.reduce((a,x)=>a+(x.trimpScore||0),0);
-  // monotonia = média / dp das sessões
-  const trimpVals=sessions.map(x=>x.trimpScore||0);
-  const mean7=trimpVals.length?trimpVals.reduce((a,b)=>a+b,0)/trimpVals.length:0;
-  const sd7=trimpVals.length>1?Math.sqrt(trimpVals.reduce((a,b)=>a+(b-mean7)**2,0)/trimpVals.length):1;
-  const monotonia=sd7>0?+(mean7/sd7).toFixed(2):null;
-  const strain=monotonia!=null?+(totalTrimp*monotonia).toFixed(0):null;
-  // ACWR: carga aguda (últimos 7d) / carga crônica (últimos 28d)
-  const allSessions=(s.sessions||[]).slice().sort((a,b)=>a.date?.localeCompare(b.date||'')||0);
+  // ── MÉTRICAS ADAPTADAS AO TREINO DE FORÇA ──────────────────────────
+
+  // 1. PSE média da sessão
+  const avgPSE=sessions.length?+(sessions.reduce((a,x)=>a+(x.sessionPSE??x.avgPSE??0),0)/sessions.length).toFixed(1):null;
+
+  // 2. TRIMP adaptado para força: VL × (PSE/10)
+  //    Pondera o volume pela percepção de esforço — sessão com alto VL e PSE baixa pesa menos
+  const trimpAdapt=sessions.reduce((a,x)=>{
+    const pse=(x.sessionPSE??x.avgPSE??5)/10;
+    return a+(x.totalVolumeLoad||0)*pse;
+  },0);
+
+  // 3. Tonnage semanal = soma do VL de todas as sessões
+  const tonnage=sessions.reduce((a,x)=>a+(x.totalVolumeLoad||0),0);
+
+  // 4. Monotonia de força: média do VL diário / DP do VL diário
+  const vlVals=sessions.map(x=>x.totalVolumeLoad||0);
+  const vlMean=vlVals.length?vlVals.reduce((a,b)=>a+b,0)/vlVals.length:0;
+  const vlSD=vlVals.length>1?Math.sqrt(vlVals.reduce((a,b)=>a+(b-vlMean)**2,0)/vlVals.length):1;
+  const monotonia=vlSD>0?+(vlMean/vlSD).toFixed(2):null;
+
+  // 5. Strain de força: Tonnage × Monotonia
+  const strain=monotonia!=null?+(tonnage*monotonia).toFixed(0):null;
+
+  // 6. ACWR de força: VL agudo (7d) / média semanal VL crônico (28d)
+  //    Zona segura 0.8–1.2 (mais conservador que endurance — dano muscular demora mais)
+  const allSess=(s.sessions||[]).slice().sort((a,b)=>(a.date||"").localeCompare(b.date||""));
   const cut28=new Date();cut28.setDate(cut28.getDate()-28);
-  const sess28=allSessions.filter(x=>new Date(x.date)>=cut28);
-  const chronic28=sess28.reduce((a,x)=>a+(x.trimpScore||0),0)/4; // média semanal 4 semanas
-  const acute7=totalTrimp;
-  const acwr=chronic28>0?+(acute7/chronic28).toFixed(2):null;
-  // variabilidade PSE
+  const sess28=allSess.filter(x=>new Date(x.date)>=cut28);
+  const vlChronic28=sess28.reduce((a,x)=>a+(x.totalVolumeLoad||0),0)/4;
+  const acwr=vlChronic28>0?+(tonnage/vlChronic28).toFixed(2):null;
+
+  // 7. Variabilidade PSE entre sessões (DP)
   const pseVals=sessions.map(x=>x.sessionPSE??x.avgPSE).filter(v=>v!=null);
-  const pseMean=pseVals.length?pseVals.reduce((a,b)=>a+b,0)/pseVals.length:null;
+  const pseMean=pseVals.length?pseVals.reduce((a,b)=>a+b,0)/pseVals.length:0;
   const pseSD=pseVals.length>1?+(Math.sqrt(pseVals.reduce((a,b)=>a+(b-pseMean)**2,0)/pseVals.length)).toFixed(2):null;
-  // densidade de treino (sessões/semana)
-  const density=sessions.length;
-  // semáforos
-  function semaforo(val,g1,g2,r1,r2,lowerBetter){
+
+
+  // ── SEMÁFOROS (valores adaptados para força) ─────────────────────
+  function sem(val,green1,green2,yellow1,yellow2){
     if(val==null)return"#9ca3af";
-    if(lowerBetter){if(val<=g1)return"#16a34a";if(val<=g2)return"#d97706";return"#dc2626";}
-    if(val>=g1&&val<=g2)return"#16a34a";
-    if(val>=r1&&val<=r2)return"#d97706";
+    if(val>=green1&&val<=green2)return"#16a34a";
+    if(val>=yellow1&&val<=yellow2)return"#d97706";
     return"#dc2626";
   }
-  const colorACWR=semaforo(acwr,0.8,1.3,0.7,1.5,false);
-  const colorMon=semaforo(monotonia,0,1.5,0,2.0,true);
-  const strainPrev=sess28.length>8?sess28.slice(0,Math.floor(sess28.length/2)).reduce((a,x)=>a+(x.trimpScore||0),0):null;
-  const strainRatio=strainPrev&&strainPrev>0?strain/strainPrev:null;
-  const colorStrain=strainRatio?semaforo(strainRatio,0.9,1.1,0.8,1.3,false):"#9ca3af";
-  const colorPseSD=semaforo(pseSD,0,1.5,0,2.5,true);
+  function semLow(val,g,y){// menor = melhor
+    if(val==null)return"#9ca3af";
+    if(val<=g)return"#16a34a";if(val<=y)return"#d97706";return"#dc2626";
+  }
+  const colorACWR=sem(acwr,0.8,1.2,0.7,1.5);
+  const colorMon=semLow(monotonia,1.5,2.0);
+  const tonnagePrev=sess28.length>sessions.length?sess28.slice(0,sess28.length-sessions.length).reduce((a,x)=>a+(x.totalVolumeLoad||0),0):null;
+  const tonnageRatio=tonnagePrev&&tonnagePrev>0?tonnage/tonnagePrev:null;
+  const colorStrain=tonnageRatio?sem(tonnageRatio,0.9,1.1,0.8,1.3):"#9ca3af";
+  const colorPseSD=semLow(pseSD,1.5,2.5);
+  const density=sessions.length;
 
   function kpiCard(lab,val,unit,color,tip){
-    const dot=color?`<span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block;margin-right:6px;vertical-align:middle"></span>`:"";
-    return`<div class="kpi" title="${tip||""}"><div class="lab">${dot}${lab}</div><div class="val">${val!=null?val:"—"}<small> ${unit}</small></div></div>`;
+    const dot=color&&color!=="#9ca3af"?`<span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block;margin-right:6px;vertical-align:middle"></span>`:"";
+    return`<div class="kpi" title="${tip||""}"><div class="lab">${dot}${lab}</div><div class="val" style="${color&&color!=="#9ca3af"?"color:"+color:""}">${val!=null?val:"—"}<small> ${unit}</small></div></div>`;
   }
-  const acwrZone=acwr==null?"—":acwr<0.7?"Subtreinamento":acwr<=1.3?"Zona segura":acwr<=1.5?"Atenção":"Risco alto";
-  const monZone=monotonia==null?"—":monotonia<1.5?"Boa variação":monotonia<2?"Atenção":"Alta monotonia";
-  const strainZone=colorStrain==="#16a34a"?"Normal":colorStrain==="#d97706"?"Elevado":"Crítico";
+  const acwrZone=acwr==null?"":acwr<0.7?" · Subtreinamento":acwr<=1.2?" · Zona segura":acwr<=1.5?" · Atenção":" · Risco alto";
+  const monZone=monotonia==null?"":monotonia<1.5?" · Boa variação":monotonia<2?" · Atenção":" · Alta monotonia";
+  const strainZone=colorStrain==="#16a34a"?" · Normal":colorStrain==="#d97706"?" · Elevado":" · Crítico";
   $("#dashKpis").innerHTML=
-    kpiCard("Volume Load Total",totalVL.toLocaleString("pt-BR"),"kg",null,"Volume Load = Carga × Reps por série")+
-    kpiCard("PSE Média",avgPSE!=null?avgPSE:"—","/10",null,"Esforço Percebido médio das sessões")+
-    kpiCard("TRIMP Total",totalTrimp||"—","UA",null,"PSE sessão × duração em minutos")+
-    kpiCard(`ACWR ${acwrZone}`,acwr!=null?acwr:"—","",colorACWR,"Razão Aguda:Crônica — zona segura: 0.8–1.3. Acima de 1.5 = risco de lesão")+
-    kpiCard(`Monotonia — ${monZone}`,monotonia!=null?monotonia:"—","",colorMon,"Média TRIMP ÷ DP. Abaixo de 1.5 = boa variação; acima de 2.0 = risco")+
-    kpiCard(`Strain — ${strainZone}`,strain!=null?strain.toLocaleString("pt-BR"):"—","UA",colorStrain,"TRIMP total × Monotonia. Compara com período anterior")+
-    kpiCard("Variab. PSE",pseSD!=null?pseSD:"—","DP",colorPseSD,"Desvio padrão da PSE entre sessões. Alto = instabilidade de recuperação")+
-    kpiCard("Sessões",density,"",null,"Total de sessões no período selecionado");
+    kpiCard("Tonnage",tonnage.toLocaleString("pt-BR"),"kg",null,"Soma do VL (Carga × Reps × Séries) de todas as sessões")+
+    kpiCard("TRIMP Força",Math.round(trimpAdapt).toLocaleString("pt-BR"),"UA",null,"VL × (PSE/10) — pondera o volume pelo esforço percebido")+
+    kpiCard("PSE Média",avgPSE!=null?avgPSE:"—","/10",null,"Esforço Percebido médio das sessões (0–10)")+
+    kpiCard("ACWR"+acwrZone,acwr!=null?acwr:"—","",colorACWR,"VL agudo (7d) ÷ média VL semanal (28d). Zona segura força: 0.8–1.2")+
+    kpiCard("Monotonia"+monZone,monotonia!=null?monotonia:"—","",colorMon,"Média VL ÷ DP do VL. <1.5 boa variação; >2.0 risco overreaching")+
+    kpiCard("Strain"+strainZone,strain!=null?strain.toLocaleString("pt-BR"):"—","UA",colorStrain,"Tonnage × Monotonia. Compara variação com período anterior")+
+    kpiCard("Variab. PSE",pseSD!=null?pseSD:"—","DP",colorPseSD,"DP da PSE entre sessões. Alto = recuperação instável ou esforço inconsistente")+
+    kpiCard("Sessões",density,"",null,"Total de sessões registradas no período");
 
   // charts
   const dts=sessions.map(x=>fmtDate(x.date));
@@ -1313,11 +1342,38 @@ function _renderDashboardData(s){
     {t:"PSE média por sessão",c:"var(--info)",d:pseSeries},
   ].map(ch=>`<div class="chartbox"><h4><span class="dot" style="background:${ch.c}"></span>${ch.t}</h4>${lineChart(ch.d,ch.c)}</div>`).join("");
 
-  // muscle VL
+  // ── ÍNDICE DE FADIGA MUSCULAR ──
+  const muscleLastVL={},musclePrevSum={},musclePrevCnt={};
+  allSess.forEach(x=>Object.entries(x.muscleVolumeLoad||{}).forEach(([m,v])=>{
+    if(!musclePrevCnt[m]){musclePrevCnt[m]=0;musclePrevSum[m]=0;}
+    musclePrevSum[m]+=v;musclePrevCnt[m]++;muscleLastVL[m]=v;
+  }));
+  const fatigueIndex=Object.entries(muscleLastVL).map(([m,last])=>{
+    const cnt=musclePrevCnt[m]||1;
+    const avg=(musclePrevSum[m]||0)/cnt;
+    const prevAvg=cnt>1?(musclePrevSum[m]-last)/(cnt-1):avg;
+    const ratio=prevAvg>0?+(last/prevAvg).toFixed(2):null;
+    return{m,last,prevAvg:+prevAvg.toFixed(0),ratio};
+  }).sort((a,b)=>(a.ratio??1)-(b.ratio??1));
+
+  const fatigueHTML=fatigueIndex.length?fatigueIndex.map(f=>{
+    const r=f.ratio??1;
+    const color=r>=0.9?"#16a34a":r>=0.7?"#d97706":"#dc2626";
+    const label=r>=0.9?"Normal":r>=0.7?"Atenção":"Fadiga";
+    return`<div class="muscle-bar-row" style="margin-bottom:6px">
+      <div class="ml" style="font-size:13px;width:100px">${esc(f.m)}</div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${Math.min((r||0)*80,100).toFixed(0)}%;background:${color}"></div></div>
+      <div style="font-size:12px;font-weight:700;color:${color};width:46px;text-align:right">${f.ratio!=null?(f.ratio*100).toFixed(0)+"%":"—"}</div>
+      <div style="font-size:11px;color:#9ca3af;width:54px;text-align:right">${label}</div>
+    </div>`;
+  }).join(""):`<div style="color:var(--ink-faint);font-size:13px;padding:8px 0">Sem dados suficientes ainda.</div>`;
+
+  // muscle VL (para gráfico de barras)
   const muscleAgg={};
   sessions.forEach(x=>Object.entries(x.muscleVolumeLoad||{}).forEach(([m,v])=>{muscleAgg[m]=(muscleAgg[m]||0)+v;}));
   const muscleEntries=Object.entries(muscleAgg).sort((a,b)=>b[1]-a[1]);
   const maxM=muscleEntries[0]?.[1]||1;
+  const fcEl=document.getElementById("fatigueChart");if(fcEl)fcEl.innerHTML=fatigueHTML;
   $("#muscleChart").innerHTML=muscleEntries.length?muscleEntries.map(([m,v])=>
     `<div class="muscle-bar-row"><div class="ml">${esc(m)}</div><div class="bar-bg"><div class="bar-fill" style="width:${(v/maxM*100).toFixed(1)}%"></div></div><div class="bv">${v.toLocaleString("pt-BR")}</div></div>`
   ).join(""):`<div style="color:var(--ink-faint);font-size:13px;padding:20px 0">Sem dados ainda.</div>`;
@@ -1346,10 +1402,10 @@ function _renderDashboardData(s){
     });
   });
   const semanas=Object.keys(vlBySemana).sort();
-  const vlVals=semanas.map(w=>vlBySemana[w]);
-  const regTotal=linReg(vlVals);
+  const vlValsWeek=semanas.map(w=>vlBySemana[w]);
+  const regTotal=linReg(vlValsWeek);
   const regRows=Object.entries(muscBySemana).map(([m,byWk])=>{
-    const vals=semanas.map(w=>byWk[w]||0);
+    const wvals=semanas.map(w=>byWk[w]||0);const vals=wvals;
     const r=linReg(vals);
     const slope=r?r.slope:0;
     const dir=slope>5?"▲ crescendo":slope<-5?"▼ caindo":"= estável";
@@ -1368,7 +1424,7 @@ function _renderDashboardData(s){
         <div class="val" style="color:${slopeColor}">${totalSlope>0?"+":""}${totalSlope.toFixed(0)}<small> kg/sem</small></div>
         <div class="ch ${totalSlope>10?"up":totalSlope<-10?"down":"flat"}">${totalDir}</div>
       </div>
-      <div style="flex:2;min-width:200px">${lineChartWithTrend(semanas.map((w,i)=>({lab:"S"+(i+1),v:vlBySemana[w]})),regTotal,"var(--accent)","var(--purple)")}</div>
+      <div style="flex:2;min-width:200px">${lineChartWithTrend(semanas.map((w,i)=>({lab:"S"+(i+1),v:vlValsWeek[i]})),regTotal,"var(--accent)","var(--purple)")}</div>
     </div>
     <table class="sessions-table"><thead><tr><th>Grupamento</th><th>Vol. total</th><th>Slope</th><th>Tendência</th></tr></thead><tbody>${regRows||"<tr><td colspan='4' style='color:var(--ink-faint)'>Sem dados por grupamento.</td></tr>"}</tbody></table>
   </div>`:`<div style="color:var(--ink-faint);font-size:13px;margin-bottom:20px;padding:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r)">Regressão linear disponível a partir de 2 semanas com sessões registradas.</div>`;
