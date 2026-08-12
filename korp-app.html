@@ -1218,12 +1218,19 @@ function showSessionPSEModal(weekId,dayCode){
 }
 
 async function finishSession(weekId,dayCode,sessionPSE){
-  if(!ui.sessionStart)return;
+  if(!ui.sessionStart){toast("Nenhuma sessão em andamento","bad");return;}
   stopSessionTimer();
   const endTime=nowISO();
   const durationMin=Math.max(1,Math.round((Date.now()-ui.sessionStart)/60000));
-  const s=cur();const w=s.weeks.find(x=>x.id===weekId);const d=w?.days.find(x=>x.code===dayCode);
-  if(!d)return;
+  const s=cur();
+  if(!s){toast("Erro: aluno não encontrado","bad");return;}
+  const w=s.weeks.find(x=>x.id===weekId)||s.weeks[0];
+  if(!w){toast("Erro: plano de treino não encontrado","bad");ui.sessionStart=null;return;}
+  // busca o dia certo: pelo código salvo, senão pela aba atual, senão o primeiro dia
+  let d=w.days.find(x=>x.code===dayCode);
+  if(!d)d=w.days[ui.curDay];
+  if(!d)d=w.days[0];
+  if(!d){toast("Erro: nenhum treino encontrado no plano","bad");ui.sessionStart=null;return;}
   let totalVL=0,muscleVL={};
   d.exercises.forEach(ex=>{
     const nS=parseInt(ex.sets)||3;
@@ -1239,7 +1246,7 @@ async function finishSession(weekId,dayCode,sessionPSE){
   const trimpScore=sessionPSE!=null?+(totalVL*(sessionPSE/10)).toFixed(0):null;
   // manter trimpLegacy para compatibilidade com dados antigos
   const trimpLegacy=sessionPSE!=null?+(sessionPSE*durationMin).toFixed(0):null;
-  const session={id:uid(),date:todayISO(),weekId,dayCode,startTime:new Date(ui.sessionStart).toISOString(),endTime,durationMin,totalVolumeLoad:Math.round(totalVL),muscleVolumeLoad:muscleVL,sessionPSE,trimpScore,exercises:d.exercises.map(ex=>({id:ex.id,name:ex.name,muscle:ex.muscle,seriesLog:ex.seriesLog||[]}))};
+  const session={id:uid(),date:todayISO(),weekId:w.id,dayCode:d.code,startTime:new Date(ui.sessionStart).toISOString(),endTime,durationMin,totalVolumeLoad:Math.round(totalVL),muscleVolumeLoad:muscleVL,sessionPSE,trimpScore,exercises:d.exercises.map(ex=>({id:ex.id,name:ex.name,muscle:ex.muscle,seriesLog:ex.seriesLog||[]}))};
   if(!s.sessions)s.sessions=[];
   s.sessions.push(session);
   ui.sessionStart=null;
