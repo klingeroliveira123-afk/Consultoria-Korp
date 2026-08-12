@@ -564,17 +564,48 @@ function cacheLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(state));}ca
 function markDirty(){dirty=true;renderSaveState();cacheLocal();if(isStudent)return;clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStudent(cur()),900);}
 function renderSaveState(){const el=$("#saveState");if(el)el.innerHTML=dirty?"<b>salvando…</b>":"☁ salvo";}
 function pubOf(s){return{name:s.name,sex:s.sex,age:s.age,goal:s.goal,coachName:state.meta.coachName,weeks:s.weeks.filter(w=>w.status==="publicado"),assessments:s.assessments,sessions:s.sessions||[]};}
-function rowToStudent(r){const d=r.data||{};const pub=r.pub||{};const sessions=[...(d.sessions||[]),...(pub.sessions||[])].filter((s,i,a)=>a.findIndex(x=>x.id===s.id)===i).sort((a,b)=>a.date?.localeCompare(b.date||'')||0);return{id:r.id,name:r.name,sex:r.sex||"2",age:r.age||"",goal:r.goal||"",startDate:r.start_date||"",active:r.active!==false,access_token:r.access_token,weeks:d.weeks||[],assessments:d.assessments||[],sessions};}
+// mescla sessões vindas de várias fontes (data.sessions, pub.sessions, estado local), sem duplicar por id
+function mergeSessions(...arrays){
+  const map=new Map();
+  for(const arr of arrays){for(const sess of(arr||[])){if(!sess?.id)continue;if(!map.has(sess.id))map.set(sess.id,sess);}}
+  return[...map.values()].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+}
+// mescla semanas: mantém a estrutura de "base" (prescrição), mas usa o seriesLog de "alt" quando ele
+// tiver mais séries concluídas — assim as cargas/reps que o aluno registrou não se perdem
+function mergeWeeks(baseWeeks,altWeeks){
+  if(!altWeeks?.length)return baseWeeks||[];
+  if(!baseWeeks?.length)return altWeeks;
+  const altById=new Map(altWeeks.map(w=>[w.id,w]));
+  return baseWeeks.map(w=>{
+    const aw=altById.get(w.id);if(!aw)return w;
+    return{...w,days:(w.days||[]).map(d=>{
+      const ad=(aw.days||[]).find(x=>x.id===d.id)||(aw.days||[]).find(x=>x.code===d.code);
+      if(!ad)return d;
+      return{...d,exercises:(d.exercises||[]).map(ex=>{
+        const aex=(ad.exercises||[]).find(x=>x.id===ex.id);if(!aex)return ex;
+        const doneN=a=>(a||[]).filter(x=>x?.done).length;
+        return doneN(aex.seriesLog)>doneN(ex.seriesLog)?{...ex,seriesLog:aex.seriesLog}:ex;
+      })};
+    })};
+  });
+}
+function rowToStudent(r){
+  const d=r.data||{};const pub=r.pub||{};
+  const sessions=mergeSessions(d.sessions,pub.sessions);
+  const weeks=mergeWeeks(d.weeks||[],pub.weeks||[]);
+  return{id:r.id,name:r.name,sex:r.sex||"2",age:r.age||"",goal:r.goal||"",startDate:r.start_date||"",active:r.active!==false,access_token:r.access_token,weeks,assessments:d.assessments||[],sessions};
+}
 async function saveStudent(s){
   if(isStudent||!sb||!session||!s)return;
-  const{error}=await sb.from("students").update({name:s.name,goal:s.goal,sex:s.sex,age:s.age,start_date:s.startDate||null,active:s.active,data:{weeks:s.weeks,assessments:s.assessments,sessions:s.sessions||[]},pub:pubOf(s),updated_at:new Date().toISOString()}).eq("id",s.id);
-  if(error){toast("Erro ao salvar","bad");console.error(error);}else{dirty=false;renderSaveState();}
-}
-async function saveSessionToCloud(s,session_data){
-  if(!sb)return;
-  // update pub with latest sessions too
-  const pub={...pubOf(s),sessions:s.sessions||[]};
-  await sb.from("students").update({data:{weeks:s.weeks,assessments:s.assessments,sessions:s.sessions||[]},pub,updated_at:new Date().toISOString()}).eq("id",s.id);
+  try{
+    // busca o que está no banco AGORA antes de sobrescrever, pra não apagar atualizações do aluno
+    const{data:latest}=await sb.from("students").select("data,pub").eq("id",s.id).single();
+    const remoteData=latest?.data||{};const remotePub=latest?.pub||{};
+    s.sessions=mergeSessions(s.sessions,remoteData.sessions,remotePub.sessions);
+    s.weeks=mergeWeeks(s.weeks,remotePub.weeks);
+    const{error}=await sb.from("students").update({name:s.name,goal:s.goal,sex:s.sex,age:s.age,start_date:s.startDate||null,active:s.active,data:{weeks:s.weeks,assessments:s.assessments,sessions:s.sessions||[]},pub:pubOf(s),updated_at:new Date().toISOString()}).eq("id",s.id);
+    if(error){toast("Erro ao salvar","bad");console.error(error);}else{dirty=false;renderSaveState();}
+  }catch(e){console.error(e);toast("Erro ao salvar","bad");}
 }
 async function createStudent(o){
   const ns=newStudent(o);
@@ -704,6 +735,32 @@ async function onLoggedIn(){
   }
   ui.mode="coach";ui.view="roster";ui.curStudent=state.students[0]?.id||null;
   closeGate();applyMode();renderBrand();renderView();renderSaveState();
+  subscribeRealtime();
+}
+
+// sincronização em tempo real: quando um aluno salva algo, o painel do coach atualiza sozinho
+let rtChannel=null;
+function subscribeRealtime(){
+  if(!sb||!session||rtChannel)return;
+  rtChannel=sb.channel("students-changes")
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"students",filter:`coach_id=eq.${session.user.id}`},payload=>{
+      const row=payload.new;if(!row)return;
+      const idx=state.students.findIndex(x=>x.id===row.id);
+      const updated=rowToStudent(row);
+      if(idx>=0){
+        if(ui.curStudent===row.id&&dirty){
+          // você está editando esse aluno agora: só incorpora sessões/cargas novas, sem perder o que você digitou
+          state.students[idx].sessions=mergeSessions(state.students[idx].sessions,updated.sessions);
+          state.students[idx].weeks=mergeWeeks(state.students[idx].weeks,updated.weeks);
+        }else{
+          state.students[idx]=updated;
+        }
+      }else{
+        state.students.push(updated);
+      }
+      if(ui.mode==="coach"){renderView();renderBrand();toast("Dados de "+updated.name+" atualizados","good");}
+    })
+    .subscribe();
 }
 
 function renderBrand(){
@@ -1771,24 +1828,28 @@ document.addEventListener("click",e=>{
 async function saveStudentData(s){
   if(!sb||!s?.access_token)return;
   try{
-    // busca o ID real do aluno no banco usando o token
+    // busca o estado ATUAL no banco (pode ter mudado: coach publicou semana nova, etc.)
     const{data:row,error}=await sb.rpc("get_student_snapshot",{p_token:s.access_token});
     if(error||!row?.length){console.error("saveStudentData: aluno não encontrado",error);return;}
     const sid=row[0].id;
-    // monta o pub com TODOS os dados atuais do state (não mistura com pub antigo)
+    const remotePub=row[0].pub||{};
+    // mescla: sessões somadas (sem duplicar), semanas com o seriesLog mais recente preservado
+    const mergedSessions=mergeSessions(s.sessions,remotePub.sessions);
+    const mergedWeeks=mergeWeeks(remotePub.weeks||s.weeks,s.weeks);
+    s.sessions=mergedSessions;s.weeks=mergedWeeks;
     const newPub={
       name:s.name,sex:s.sex,age:s.age,goal:s.goal,
-      coachName:row[0].pub?.coachName||"Consultoria",
-      weeks:s.weeks,
+      coachName:remotePub.coachName||"Consultoria",
+      weeks:mergedWeeks,
       assessments:s.assessments||[],
-      sessions:s.sessions||[]
+      sessions:mergedSessions
     };
     const{error:upErr}=await sb.from("students").update({
       pub:newPub,
       updated_at:new Date().toISOString()
     }).eq("id",sid);
     if(upErr){console.error("saveStudentData: erro ao salvar",upErr);}
-    else{console.log("saveStudentData: salvo OK, sessões:",s.sessions?.length);}
+    else{console.log("saveStudentData: salvo OK, sessões:",mergedSessions.length);}
   }catch(e){console.error("saveStudentData exception:",e);}
 }
 
