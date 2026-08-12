@@ -433,18 +433,6 @@ body.mode-aluno #weekEditor{border:none;background:transparent;box-shadow:none}
 <!-- TREINO -->
 <div class="wrap hidden" id="view-treino">
   <div class="train-grid">
-    <div class="panel side coach-only">
-      <div class="head"><h3>Semanas</h3><div class="spacer"></div><span class="label-mini" id="weekCount"></span></div>
-      <div class="weeklist" id="weekList"></div>
-      <div class="weekfoot">
-        <button class="btn primary" id="btnDuplicate">⎘ Duplicar p/ próxima semana</button>
-        <button class="btn ghost sm" id="btnNewWeek">+ Nova semana em branco</button>
-      </div>
-    </div>
-    <div class="panel side aluno-only" style="margin-bottom:0">
-      <div class="head"><h3>Suas semanas</h3></div>
-      <div class="weeklist" id="weekListAluno"></div>
-    </div>
     <div class="panel" id="weekEditor"></div>
   </div>
 </div>
@@ -589,10 +577,19 @@ function mergeWeeks(baseWeeks,altWeeks){
     })};
   });
 }
+// colapsa semanas antigas (de contas migradas) num único plano fixo — pega a mais recente como base
+function collapseToSinglePlan(weeksArr){
+  if(!weeksArr?.length)return[{id:uid(),label:"Plano atual",startDate:"",endDate:"",month:"",note:"",status:"publicado",days:seedDays()}];
+  if(weeksArr.length===1)return[{...weeksArr[0],status:"publicado",label:weeksArr[0].label||"Plano atual"}];
+  const sorted=weeksArr.slice().sort((a,b)=>(a.startDate||"").localeCompare(b.startDate||""));
+  const latest=sorted[sorted.length-1];
+  return[{...latest,status:"publicado",label:latest.label&&latest.label!=="Semana 1"?latest.label:"Plano atual"}];
+}
 function rowToStudent(r){
   const d=r.data||{};const pub=r.pub||{};
   const sessions=mergeSessions(d.sessions,pub.sessions);
-  const weeks=mergeWeeks(d.weeks||[],pub.weeks||[]);
+  const mergedWeeks=mergeWeeks(d.weeks||[],pub.weeks||[]);
+  const weeks=collapseToSinglePlan(mergedWeeks);
   return{id:r.id,name:r.name,sex:r.sex||"2",age:r.age||"",goal:r.goal||"",startDate:r.start_date||"",active:r.active!==false,access_token:r.access_token,weeks,assessments:d.assessments||[],sessions};
 }
 async function saveStudent(s){
@@ -637,7 +634,7 @@ function seedDays(){return[
 ];}
 function seedStudentRael(){
   return{id:uid(),name:"Rael",sex:"2",age:"28",goal:"Hipertrofia",startDate:"2024-01-15",active:true,
-    weeks:[{id:uid(),label:"Semana 1 · 02 a 08 Fev",startDate:"2026-02-02",endDate:"2026-02-08",month:"FEVEREIRO 26",note:"Início do mesociclo.",status:"publicado",days:seedDays()}],
+    weeks:[{id:uid(),label:"Plano atual",startDate:"2026-02-02",endDate:"",month:"",note:"",status:"publicado",days:seedDays()}],
     assessments:[{id:uid(),date:"2024-01-15",sex:"2",age:"26",weightKg:"78",heightM:"",circ:{ombros:"124.5",torax:"100",bracoD:"37",bracoE:"37",antebracoD:"29",antebracoE:"29",abdominal:"89",cintura:"86",quadril:"99",coxaD:"61",coxaE:"60",pernaD:"37",pernaE:"38"},dobras:{peitoral:"5",axilar:"10",subescapular:"13",tricipital:"8",bicipital:"0",suprailiaca:"10",abdominal:"20",coxa:"14",panturrilha:"0"}}],
     sessions:[]};
 }
@@ -704,7 +701,7 @@ async function bootStudent(token){
   const row=data[0],pub=row.pub||{};
   // sessions: prioriza pub.sessions (mais recente, salvo pelo aluno)
   const stuSessions=(pub.sessions||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-  state={meta:{coachName:row.coach_name||"Consultoria",clientSnapshot:true},students:[{id:row.id,name:row.name,sex:pub.sex||"2",age:pub.age||"",goal:pub.goal||"",weeks:pub.weeks||[],assessments:pub.assessments||[],sessions:stuSessions,access_token:token,active:true}]};
+  state={meta:{coachName:row.coach_name||"Consultoria",clientSnapshot:true},students:[{id:row.id,name:row.name,sex:pub.sex||"2",age:pub.age||"",goal:pub.goal||"",weeks:collapseToSinglePlan(pub.weeks||[]),assessments:pub.assessments||[],sessions:stuSessions,access_token:token,active:true}]};
   ui.mode="aluno";ui.curStudent=state.students[0].id;ui.view="workspace";ui.tab="treino";
   closeGate();applyMode();renderBrand();renderView();
 }
@@ -803,7 +800,7 @@ function studentQuick(s){
   let w=null,fat=null,lastDate=A[A.length-1]?.date||null;
   for(let i=A.length-1;i>=0;i--){const v=numOrBlank(A[i].weightKg);if(v!=null){w=v;break;}}
   for(let i=A.length-1;i>=0;i--){const c=bodyComp(A[i]);if(c.fat!=null){fat=c.fat;break;}}
-  return{w,fat,lastDate,pub:s.weeks.filter(x=>x.status==="publicado").length,sessions:s.sessions?.length||0};
+  return{w,fat,lastDate,pub:s.weeks[0]?.days?.length||0,sessions:s.sessions?.length||0};
 }
 function renderRoster(){
   const q=ui.search.trim().toLowerCase();
@@ -824,7 +821,7 @@ function renderRoster(){
         <div class="stat"><div class="l">% Gordura</div><div class="v">${k.fat!=null?k.fat.toFixed(1):"—"}<small> %</small></div></div>
       </div>
       <div class="foot"><span class="badge ${s.active?"act":"inact"}">${s.active?"ativo":"inativo"}</span>
-        <span>${k.pub} sem. pub.</span><span style="flex:1"></span><span>${k.sessions} sessões</span></div></div>`;
+        <span>${k.pub} treino${k.pub!==1?"s":""}/plano</span><span style="flex:1"></span><span>${k.sessions} sessões</span></div></div>`;
   }).join("");
   $("#rosterGrid").innerHTML=cards+`<div class="addcard" id="addCard"><div class="plus">+</div><div>Novo aluno</div></div>`;
 }
@@ -835,93 +832,28 @@ function renderSwitcher(){
     state.students.map(st=>`<button class="di" data-sw="${st.id}"><span class="av" style="background:${avatarColor(st.id)}">${initials(st.name)}</span><span>${esc(st.name)}</span></button>`).join("");
 }
 
-// weeks
-function visibleWeeks(){const s=cur();if(!s)return[];const ws=s.weeks.slice().sort((a,b)=>(a.startDate||"").localeCompare(b.startDate||""));return ui.mode==="aluno"?ws.filter(w=>w.status==="publicado"):ws;}
+// plano (antes "semanas" — agora é um plano único e fixo por aluno)
+function visibleWeeks(){const s=cur();if(!s)return[];return s.weeks.slice().sort((a,b)=>(a.startDate||"").localeCompare(b.startDate||""));}
 function renderWeekList(){
   const list=visibleWeeks();
-  if($("#weekCount"))$("#weekCount").textContent=`${cur()?.weeks.length||0}`;
   if(!ui.selWeek||!list.find(w=>w.id===ui.selWeek))ui.selWeek=list[list.length-1]?.id||null;
-  const html=list.map(w=>{
-    const tag=w.status==="publicado"?'<span class="tag pub">publicado</span>':'<span class="tag rasc">rascunho</span>';
-    return`<button class="weekitem ${w.id===ui.selWeek?"on":""}" data-wk="${w.id}">
-      <span class="mo">${esc(w.month||"")}</span><span class="wk">${esc(w.label||"Semana")}</span>
-      <span class="dt">${fmtDate(w.startDate)} – ${fmtDate(w.endDate)}</span>${tag}</button>`;
-  }).join("")||'<div class="empty" style="padding:20px"><div class="big">Sem semanas</div></div>';
-  if($("#weekList"))$("#weekList").innerHTML=html;
-  if($("#weekListAluno"))$("#weekListAluno").innerHTML=html;
 }
 function renderWeekEditor(){
   const w=findWeek(ui.selWeek),box=$("#weekEditor");
-  if(!w){box.innerHTML=`<div class="empty"><div class="big">Nenhuma semana</div></div>`;return;}
-  const coach=ui.mode==="coach",prev=ui.compare?prevWeekOf(w):null;
+  if(!w){box.innerHTML=`<div class="empty"><div class="big">Nenhum plano ainda</div></div>`;return;}
+  const coach=ui.mode==="coach";
   const head=`<div class="week-head">
-    <div class="ttl" style="flex:1;min-width:200px"><input data-wf="label" value="${esc(w.label)}" ${coach?"":"disabled"} placeholder="Nome da semana"></div>
-    ${coach?`<div class="field"><label>Início</label><input type="date" data-wf="startDate" value="${esc(w.startDate)}"></div>
-      <div class="field"><label>Fim</label><input type="date" data-wf="endDate" value="${esc(w.endDate)}"></div>
-      <div class="field"><label>Mês/Bloco</label><input data-wf="month" value="${esc(w.month||"")}" style="width:110px"></div>
-      <div class="field"><label>Status</label><select data-wf="status"><option value="rascunho" ${w.status==="rascunho"?"selected":""}>Rascunho</option><option value="publicado" ${w.status==="publicado"?"selected":""}>Publicado</option></select></div>`
-      :`<div class="pill">${fmtDateFull(w.startDate)} – ${fmtDateFull(w.endDate)}</div>`}</div>`;
+    <div class="ttl" style="flex:1;min-width:200px"><input data-wf="label" value="${esc(w.label)}" ${coach?"":"disabled"} placeholder="Nome do plano"></div>
+    ${coach?"":`<div class="pill">Plano atual</div>`}</div>`;
   const actions=coach?`<div class="week-actions">
-    <button class="btn sm" id="acDup">⎘ Duplicar</button>
-    <button class="btn sm ghost ${ui.compare?"primary":""}" id="acCmp">${ui.compare?"✓ ":""}Comparar</button>
-    <button class="btn sm ghost" id="acAddDay">+ Treino</button>
-    <span style="flex:1"></span>
-    <button class="btn sm ghost danger" id="acDelWeek">🗑 Excluir</button></div>`:"";
+    <button class="btn sm ghost" id="acAddDay">+ Treino</button></div>`:"";
   const noteCoach=coach?`<div style="padding:0 16px 4px"><div class="note-row"><span class="k">Obs.</span><input data-wf="note" value="${esc(w.note||"")}" placeholder="Observação para o aluno"></div></div>`:(w.note?`<div style="padding:10px 16px 0"><div class="pill">📝 ${esc(w.note)}</div></div>`:"");
-  
+
   let daysHtml="";
   if(coach){
-    daysHtml=`<div class="days">${w.days.map(d=>coachDayHTML(w,d,prev)).join("")}</div>`;
+    daysHtml=`<div class="days">${w.days.map(d=>coachDayHTML(w,d,null)).join("")}</div>`;
   }else{
-    const allWeeks=visibleWeeks();
-    // acordeão de semanas — cada semana é um item expansível
-    const accordion=`<div class="week-accordion">${allWeeks.map(wk=>{
-      const isOpen=wk.id===ui.selWeek;
-      // contar séries concluídas
-      let doneSeries=0,totalSeries=0;
-      wk.days.forEach(d=>d.exercises.forEach(ex=>{
-        const n=parseInt(ex.sets)||3;totalSeries+=n;
-        for(let i=0;i<n;i++){if(ex.seriesLog?.[i]?.done)doneSeries++;}
-      }));
-      const prog=totalSeries>0?`${doneSeries}/${totalSeries} séries`:"";
-      const bodyHtml=isOpen?`<div class="week-acc-body">${alunoDayTabsHTML(wk)}</div>`:`<div class="week-acc-body"></div>`;
-      return`<div class="week-acc-item${isOpen?" open":""}" data-wkacc="${wk.id}">
-        <div class="week-acc-header">
-          <div class="week-acc-dot"></div>
-          <div class="week-acc-info">
-            <div class="week-acc-title">${esc(wk.label)}</div>
-            <div class="week-acc-sub">${fmtDateFull(wk.startDate)} – ${fmtDateFull(wk.endDate)}${wk.note?` · ${esc(wk.note)}`:""}
-            </div>
-          </div>
-          <div class="week-acc-badge">${prog}</div>
-          <div class="week-acc-arrow">▼</div>
-        </div>
-        ${bodyHtml}
-      </div>`;
-    }).join("")}</div>`;
-
-    const days=w.days;
-    const dayIdx=Math.min(ui.curDay,days.length-1);
-    const d=days[dayIdx];
-    // progress per day
-    function dayProgress(d){let done=0,total=0;d.exercises.forEach(ex=>{const n=parseInt(ex.sets)||3;total+=n;for(let i=0;i<n;i++){if(ex.seriesLog?.[i]?.done)done++;}});return{done,total};}
-    const tabs=days.map((d,i)=>{const{done,total}=dayProgress(d);const prog=total>0?`${done}/${total}`:"";return`<button class="day-tab ${i===dayIdx?"on":""}" data-daytab="${i}"><span class="tab-code">${esc(d.code)}</span><span style="font-size:11px;color:${i===dayIdx?"var(--ink-dim)":"var(--ink-faint)"};">${esc(d.title||"")}</span>${prog?`<span class="tab-prog">${prog} séries</span>`:""}</button>`;}).join("");
-
-    const sessionRunning=!!ui.sessionStart;
-    const sessBar=`<div class="session-header">
-      <div class="top-row">
-        <div class="session-clock">
-          <span class="lbl">Sessão</span>
-          <span class="val" id="sessionTimerDisplay">${sessionRunning?fmtTime(Math.floor((Date.now()-ui.sessionStart)/1000)):"00:00"}</span>
-        </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-family:var(--disp);font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(w.label)}</div>
-          ${w.note?`<div style="font-size:11.5px;color:var(--info);margin-top:2px">📝 ${esc(w.note)}</div>`:""}
-        </div>
-        ${!sessionRunning?`<button class="btn good" id="startSessionBtn" style="flex:none">▶ Iniciar</button>`:`<button class="btn ghost" id="endSessionBtn" style="flex:none;border-color:var(--accent);color:var(--accent)">■ Finalizar</button>`}
-      </div>
-    </div>`;
-    daysHtml=accordion;
+    daysHtml=alunoDayTabsHTML(w);
   }
   box.innerHTML=head+actions+noteCoach+daysHtml;
   if(!coach&&ui.sessionStart)startSessionTimerDisplay();
