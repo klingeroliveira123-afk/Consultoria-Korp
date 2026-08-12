@@ -1212,8 +1212,13 @@ function showSessionPSEModal(weekId,dayCode){
   });
   $("#confirmSessionBtn").onclick=()=>{
     if(selectedPSE===null){toast("Selecione a PSE antes","bad");return;}
-    closeModal();
-    finishSession(weekId,dayCode,selectedPSE);
+    try{
+      closeModal();
+      finishSession(weekId,dayCode,selectedPSE);
+    }catch(e){
+      console.error("Erro ao finalizar sessão:",e);
+      toast("Erro ao finalizar: "+(e.message||e),"bad");
+    }
   };
 }
 
@@ -1688,8 +1693,10 @@ document.addEventListener("click",e=>{
   // ALUNO session
   if(t.closest("#startSessionBtn")){
     const w=findWeek(ui.selWeek);
+    const day=w?.days[ui.curDay];
+    if(day)day.exercises.forEach(ex=>{ex.seriesLog=[];});
     ui.sessionStart=Date.now();
-    ui.sessionDayCode=w?.days[ui.curDay]?.code||w?.days[0]?.code;
+    ui.sessionDayCode=day?.code||w?.days[0]?.code;
     ui.sessionWeekId=ui.selWeek;
     startSessionTimerDisplay();
     renderWeekEditor();return;}
@@ -1719,7 +1726,11 @@ document.addEventListener("click",e=>{
   // start/end session via acordeão
   const ss=t.closest("[data-startsess]");if(ss){
     const wkId=ss.dataset.startsess;const wkObj=visibleWeeks().find(w=>w.id===wkId);
-    ui.sessionStart=Date.now();ui.sessionWeekId=wkId;ui.sessionDayCode=wkObj?.days[ui.curDay||0]?.code||wkObj?.days[0]?.code;
+    const dayIdx=ui.curDay||0;
+    const day=wkObj?.days[dayIdx];
+    // zera as séries desse treino pra começar do zero — o histórico da sessão anterior já está salvo em s.sessions
+    if(day)day.exercises.forEach(ex=>{ex.seriesLog=[];});
+    ui.sessionStart=Date.now();ui.sessionWeekId=wkId;ui.sessionDayCode=day?.code||wkObj?.days[0]?.code;
     startSessionTimerDisplay(wkId);
     // re-render body
     const body=document.querySelector(`[data-wkacc="${wkId}"] .week-acc-body`);
