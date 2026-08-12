@@ -30,17 +30,17 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .mono{font-family:var(--mono)}
 
 /* topbar */
-.topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;padding:12px 18px;background:rgba(14,15,18,.85);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:12px;padding:14px 18px;background:#712B13;border-bottom:none}
 .brand{display:flex;align-items:center;gap:11px;cursor:pointer}
-.brand .mark{width:34px;height:34px;border-radius:9px;flex:none;background:linear-gradient(150deg,var(--accent),#ff7a4d);display:grid;place-items:center;font-family:var(--disp);font-weight:800;color:#fff;font-size:20px;box-shadow:0 4px 14px rgba(240,65,43,.4)}
-.brand .nm{font-family:var(--disp);font-weight:700;font-size:16px;letter-spacing:-.01em}
-.brand .sub{font-size:11.5px;color:var(--ink-dim)}
+.brand .mark{width:34px;height:34px;border-radius:9px;flex:none;background:rgba(255,255,255,.16);display:grid;place-items:center;font-weight:500;color:#FAECE7;font-size:16px}
+.brand .nm{font-weight:500;font-size:16px;letter-spacing:-.01em;color:#FAECE7}
+.brand .sub{font-size:11.5px;color:#F0997B}
 .spacer{flex:1}
-.modeswitch{display:flex;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
-.modeswitch button{border:none;background:transparent;color:var(--ink-dim);padding:7px 13px;border-radius:7px;font-weight:600;font-size:13px}
-.modeswitch button.on{background:var(--accent);color:#fff}
-.modeswitch button.on.aluno{background:var(--info)}
-.iconbtn{border:1px solid var(--line);background:var(--bg2);color:var(--ink);width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:16px}
+.modeswitch{display:flex;background:rgba(255,255,255,.14);border:none;border-radius:10px;padding:3px;gap:2px}
+.modeswitch button{border:none;background:transparent;color:#F5C4B3;padding:7px 13px;border-radius:8px;font-weight:500;font-size:13px}
+.modeswitch button.on{background:#FAECE7;color:#712B13}
+.modeswitch button.on.aluno{background:#FAECE7;color:#712B13}
+.iconbtn{border:none;background:rgba(255,255,255,.14);color:#FAECE7;width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:16px}
 .menu-wrap{position:relative}
 .menu{position:absolute;right:0;top:46px;background:var(--card);border:1px solid var(--line2);border-radius:12px;box-shadow:var(--shadow);padding:6px;min-width:248px;z-index:60;display:none}
 .menu.open{display:block;animation:pop .14s ease}
@@ -50,9 +50,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .menu .sep{height:1px;background:var(--line);margin:6px 4px}
 .menu .hint{font-size:11px;color:var(--ink-faint);padding:6px 12px 8px;line-height:1.4}
 .switcher{position:relative}
-.switcher-btn{display:flex;align-items:center;gap:9px;background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:6px 12px 6px 8px;color:var(--ink);max-width:220px}
+.switcher-btn{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.14);border:none;border-radius:11px;padding:6px 12px 6px 8px;color:#FAECE7;max-width:220px}
 .switcher-btn .av{width:26px;height:26px;border-radius:7px;flex:none;display:grid;place-items:center;font-weight:700;font-size:13px;color:#fff}
-.switcher-btn .nm{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.switcher-btn .nm{font-weight:500;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dropdown{position:absolute;left:0;top:46px;background:var(--card);border:1px solid var(--line2);border-radius:12px;box-shadow:var(--shadow);padding:6px;min-width:220px;max-height:300px;overflow:auto;z-index:60;display:none}
 .dropdown.open{display:block;animation:pop .14s ease}
 .dropdown .di{width:100%;text-align:left;border:none;background:transparent;color:var(--ink);padding:9px 10px;border-radius:8px;font-size:13.5px;display:flex;align-items:center;gap:10px}
@@ -360,8 +360,7 @@ body.mode-aluno{
   --warn:#d97706;--info:#1d6fb8;
   background-image:none;
 }
-body.mode-aluno .topbar{background:rgba(255,255,255,.95);border-bottom:1px solid #e8e8e8}
-body.mode-aluno .brand .mark{background:linear-gradient(150deg,#e8281a,#ff6b4a)}
+body.mode-aluno .brand .mark{background:rgba(255,255,255,.16)}
 body.mode-aluno .coach-only{display:none!important}
 body.mode-aluno .aluno-only{display:block}
 body.mode-aluno .panel.side{display:none!important}
@@ -1167,36 +1166,14 @@ function unlockNextSerie(exId,si){
   ex.seriesLog[si].resting=false;
   const nSets=parseInt(ex.sets)||3;
   const nextSi=si+1;
-  // substitui o card de descanso pelo card concluído + próxima série
-  const restEl=document.getElementById(`sc_${exId}_${si}`);
-  if(restEl){restEl.outerHTML=serieCardHTML(ex,si,"completed");}
-  if(nextSi<nSets){
-    // insere próxima série (mesmo exercício — atualização local, sem recarregar tudo)
-    const wrap=document.querySelector(`.ex-series-wrap`);
-    // encontra o wrap do exercício correto
-    const allWraps=document.querySelectorAll(".ex-series-wrap");
-    const exIdx=d.exercises.findIndex(e=>e.id===exId);
-    const myWrap=allWraps[exIdx];
-    if(myWrap){
-      const nextEl=document.getElementById(`sc_${exId}_${nextSi}`);
-      if(nextEl){nextEl.outerHTML=serieCardHTML(ex,nextSi,"active");}
-    }
-  }else{
-    // exercício inteiro concluído — recarrega a tela pra colapsar este e abrir o próximo
-    toast("✓ Exercício concluído! Avançando…","good");
-    setTimeout(()=>{
-      renderWeekEditor();
-      const nextCard=document.querySelector(".ex-card");
-      if(nextCard)nextCard.scrollIntoView({behavior:"smooth",block:"start"});
-    },600);
-    return;
-  }
-  toast("⏰ Descansou! Próxima série liberada.","good");
-  // scroll suave para a próxima série
+  const exerciseDone=nextSi>=nSets;
+  toast(exerciseDone?"✓ Exercício concluído! Avançando…":"⏰ Descansou! Próxima série liberada.","good");
+  // sempre recarrega a tela do dia — evita desincronizar o card exibido
+  renderWeekEditor();
   setTimeout(()=>{
-    const next=document.getElementById(`sc_${exId}_${nextSi}`);
-    if(next)next.scrollIntoView({behavior:"smooth",block:"center"});
-  },200);
+    const target=exerciseDone?document.querySelector(".ex-card"):document.getElementById(`sc_${exId}_${nextSi}`);
+    if(target)target.scrollIntoView({behavior:"smooth",block:exerciseDone?"start":"center"});
+  },150);
 }
 
 function skipRest(exId,si){
