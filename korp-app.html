@@ -180,57 +180,58 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .day-tab .tab-prog{font-size:11px;color:var(--ink-faint)}
 .day-tab.on .tab-prog{color:var(--accent)}
 
-/* exercise cards aluno */
-.ex-card{background:#fff;border:1.5px solid var(--line);border-radius:16px;margin-bottom:14px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.06)}
-.ex-card .ex-head{padding:14px 16px;border-bottom:1.5px solid var(--line)}
-.ex-header-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
-.ex-card .ex-icon{width:40px;height:40px;border-radius:10px;background:#fbe9e4;display:grid;place-items:center;flex:none}
-.ex-progbar{display:flex;gap:4px;margin-bottom:8px}
-.ex-progbar span{flex:1;height:5px;border-radius:3px;background:var(--line)}
-.ex-progbar span.on{background:#16a34a}
-.ex-card .ex-name{font-weight:800;font-size:18px;letter-spacing:-.02em;color:var(--ink);flex:1}
+/* exercise cards aluno — v8 elegante */
+.ex-card{background:#fff;border:1px solid #f0eee9;border-radius:16px;margin-bottom:12px;overflow:hidden}
+.ex-card .ex-head{padding:18px 18px 14px}
+.ex-header-row{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.ex-ring{flex:none}
+.ex-header-txt{flex:1;min-width:0}
+.ex-muscle-lab{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#a8a29a;margin-bottom:2px}
+.ex-card .ex-name{font-weight:500;font-size:19px;letter-spacing:-.01em;color:var(--ink)}
 .ex-card .ex-sub{display:flex;gap:6px;flex-wrap:wrap}
-.ex-card .ex-pill{font-size:12px;background:var(--bg2);border:1.5px solid var(--line);border-radius:20px;padding:4px 11px;color:var(--ink-dim);font-weight:600}
-.ex-card .ex-pill.accent-pill{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
-.ex-card .ex-how{padding:8px 16px;font-size:13px;color:#1d6fb8;background:#f0f7ff;border-bottom:1.5px solid #dbeafe}
-.ex-series-wrap{padding:8px 14px 12px}
+.ex-card .ex-pill{font-size:11.5px;background:#faf9f6;border:1px solid #f0eee9;border-radius:20px;padding:4px 10px;color:#8a8578;font-weight:500}
+.ex-card .ex-pill.accent-pill{background:#fdf0ed;border-color:#f5cfc2;color:#a8431f}
+.ex-card .ex-how{padding:8px 16px;font-size:13px;color:#1d6fb8;background:#f0f7ff;border-bottom:1px solid #dbeafe}
+.ex-series-wrap{padding:0 16px 16px}
+/* linha coletada (exercício concluído/bloqueado) */
+.ex-row-collapsed{display:flex;align-items:center;gap:10px;padding:13px 4px;border-bottom:1px solid #f0eee9}
+.ex-row-collapsed:last-child{border-bottom:none}
+.ex-row-collapsed.done{color:#3b6d11}
+.ex-row-collapsed .erc-name{font-size:14.5px;flex:1;color:var(--ink-dim)}
+.ex-row-collapsed.done .erc-name{color:var(--ink)}
+.ex-row-collapsed .erc-meta{font-size:12px;color:#a8a29a}
 
-/* ===== SERIE CARD v7 — sequencial ===== */
-.serie-card{margin:6px 0;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;overflow:hidden;transition:.2s}
-.serie-card.active{border-color:var(--accent);box-shadow:0 2px 10px rgba(232,40,26,.12)}
-.serie-card.completed{border-color:#16a34a;background:#f0fdf4}
-.sc-head{display:flex;align-items:center;gap:8px;padding:10px 12px}
-.sc-num{width:28px;height:28px;border-radius:50%;background:#f3f4f6;border:1.5px solid #d1d5db;display:grid;place-items:center;font-weight:800;font-size:13px;color:#6b7280;flex:none}
-.serie-card.active .sc-num{background:var(--accent);border-color:var(--accent);color:#fff}
-.serie-card.completed .sc-num{background:#16a34a;border-color:#16a34a;color:#fff}
-.sc-inputs{display:flex;gap:6px;flex:1}
-.sc-field{display:flex;flex-direction:column;gap:2px;flex:1}
-.sc-field label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;font-weight:700}
-.sc-numfield{display:flex;align-items:center;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:9px;overflow:hidden}
-.sc-numfield button{border:none;background:transparent;color:var(--accent);font-size:20px;font-weight:700;width:34px;height:42px;flex:none;display:grid;place-items:center;cursor:pointer}
-.sc-numfield button:active{background:#fef2f2}
-.sc-numfield input{border:none;background:transparent;color:#111;font-family:var(--mono);font-size:17px;font-weight:800;text-align:center;flex:1;min-width:0;height:42px;padding:0;outline:none}
+/* ===== SERIE CARD v8 — sequencial, minimalista ===== */
+.serie-card{margin:0;background:transparent;border:none;border-radius:0;overflow:visible}
+.serie-card.active{border:none}
+.sc-head{display:flex;flex-direction:column;gap:0;padding:0}
+.sc-num{display:none}
+.sc-inputs{display:flex;gap:10px;flex:1;margin-bottom:12px}
+.sc-field{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;background:#faf9f6;border-radius:12px;padding:14px 0 10px}
+.sc-field label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#a8a29a;font-weight:500}
+.sc-numfield{display:flex;align-items:center;gap:12px;background:transparent;border:none}
+.sc-numfield button{border:none;background:transparent;color:#c0512f;font-size:20px;font-weight:500;width:28px;height:34px;flex:none;display:grid;place-items:center;cursor:pointer}
+.sc-numfield input{border:none;background:transparent;color:#111;font-family:var(--font-sans,inherit);font-size:24px;font-weight:500;text-align:center;flex:none;width:56px;height:34px;padding:0;outline:none}
 .sc-numfield input::-webkit-outer-spin-button,.sc-numfield input::-webkit-inner-spin-button{-webkit-appearance:none}
 /* PSE grade */
-.pse-toggle{width:calc(100% - 24px);margin:8px 12px 0;display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:9px;padding:11px 14px;font-size:13.5px;font-weight:700;color:#6b7280;cursor:pointer}
+.pse-toggle{width:100%;margin:0 0 10px;display:flex;align-items:center;justify-content:space-between;background:transparent;border:1px solid #f0eee9;border-radius:9px;padding:12px 14px;font-size:13.5px;font-weight:500;color:#8a8578;cursor:pointer}
 .pse-toggle .pse-chev{font-size:12px;color:#9ca3af}
-.pse-toggle.done{background:#fdf0ef;border-color:var(--accent);color:var(--accent)}
-.pse-toggle.done .pse-chev{color:var(--accent)}
-.pse-section{padding:8px 12px 6px;border-top:1px solid #f3f4f6}
-.pse-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;font-weight:700;margin-bottom:7px}
+.pse-toggle.done{background:transparent;border-color:#f5cfc2;color:#a8431f}
+.pse-toggle.done .pse-chev{color:#a8431f}
+.pse-section{padding:0 0 10px}
+.pse-label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#a8a29a;font-weight:500;margin-bottom:8px}
 .pse-grid-row{display:grid;gap:5px;margin-bottom:5px}
 .pse-grid-row.row6{grid-template-columns:repeat(6,1fr)}
 .pse-grid-row.row5{grid-template-columns:repeat(5,1fr)}
-.pse-btn{border:1.5px solid #e5e7eb;background:#f9fafb;border-radius:9px;padding:10px 0;font-size:16px;font-weight:800;text-align:center;cursor:pointer;color:#374151;transition:.12s}
-.pse-btn:active{transform:scale(.88)}
-.pse-btn.on{color:#fff;transform:scale(1.06)}
-.pse-0{--pc:#9ca3af}.pse-1{--pc:#60a5fa}.pse-2{--pc:#34d399}.pse-3{--pc:#4ade80}.pse-4{--pc:#a3e635}.pse-5{--pc:#fbbf24}.pse-6{--pc:#fb923c}.pse-7{--pc:#f97316}.pse-8{--pc:#ef4444}.pse-9{--pc:#dc2626}.pse-10{--pc:#991b1b}
+.pse-btn{border:1px solid #f0eee9;background:transparent;border-radius:9px;padding:9px 0;font-size:14px;font-weight:500;text-align:center;cursor:pointer;color:#57544c;transition:.12s}
+.pse-btn:active{transform:scale(.9)}
+.pse-btn.on{color:#fff}
 .pse-btn.on{background:var(--pc);border-color:var(--pc)}
-/* botão concluir */
-.conclude-section{padding:8px 12px 12px}
-.conclude-btn{width:100%;border:none;border-radius:10px;padding:14px;font-weight:800;font-size:16px;background:#f3f4f6;color:#9ca3af;cursor:default;transition:.15s}
-.conclude-btn.ready{background:var(--accent);color:#fff;cursor:pointer}
-.conclude-btn.ready:active{background:#c0201a}
+.pse-0{--pc:#9ca3af}.pse-1{--pc:#60a5fa}.pse-2{--pc:#60a5fa}.pse-3{--pc:#639922}.pse-4{--pc:#639922}.pse-5{--pc:#EF9F27}.pse-6{--pc:#EF9F27}.pse-7{--pc:#D85A30}.pse-8{--pc:#D85A30}.pse-9{--pc:#E24B4A}.pse-10{--pc:#791F1F}
+.conclude-section{padding:2px 0 0}
+.conclude-btn{width:100%;border:none;border-radius:12px;padding:15px;font-weight:500;font-size:15px;background:#f0eee9;color:#a8a29a;cursor:default;transition:.15s}
+.conclude-btn.ready{background:#c0512f;color:#fff;cursor:pointer}
+.conclude-btn.ready:active{background:#a8431f}
 /* rest inline — timer entre séries */
 .rest-inline{margin:6px 0;background:#fffbeb;border:2px solid #f59e0b;border-radius:12px;padding:14px 16px;text-align:center}
 .rest-inline .ri-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#d97706;font-weight:700;margin-bottom:6px}
@@ -972,7 +973,7 @@ function serieCardHTML(ex,i,state){
       <div class="sc-num">${i+1}</div>
       <div class="sc-inputs">
         <div class="sc-field">
-          <label>Carga (kg)</label>
+          <label>Carga · kg</label>
           <div class="sc-numfield">
             <button data-step="-0.5" data-ex="${ex.id}" data-si="${i}" data-field="weight">−</button>
             <input type="number" class="s-weight" data-ex="${ex.id}" data-si="${i}" value="${wVal}" step="0.5" inputmode="decimal">
@@ -980,7 +981,7 @@ function serieCardHTML(ex,i,state){
           </div>
         </div>
         <div class="sc-field">
-          <label>Repetições</label>
+          <label>Reps</label>
           <div class="sc-numfield">
             <button data-step="-1" data-ex="${ex.id}" data-si="${i}" data-field="reps">−</button>
             <input type="number" class="s-reps" data-ex="${ex.id}" data-si="${i}" value="${rVal}" step="1" inputmode="numeric">
@@ -1032,25 +1033,44 @@ function muscleIconSVG(muscle){
   // costas/bíceps/tríceps/geral — puxada
   return`<svg width="26" height="26" viewBox="0 0 44 44"><circle cx="22" cy="8" r="4" fill="none" stroke="${c}" stroke-width="2"/><path d="M22 12 L22 26 M22 15 L12 8 M22 15 L32 8 M22 26 L15 38 M22 26 L29 38" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
 }
+function progressRingSVG(done,total){
+  const r=22,circ=2*Math.PI*r,pct=total>0?done/total:0,off=circ*(1-pct);
+  return`<svg class="ex-ring" width="52" height="52" viewBox="0 0 52 52">
+    <circle cx="26" cy="26" r="${r}" fill="none" stroke="#f0eee9" stroke-width="3"/>
+    <circle cx="26" cy="26" r="${r}" fill="none" stroke="#D85A30" stroke-width="3" stroke-linecap="round" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 26 26)"/>
+    <text x="26" y="30" text-anchor="middle" font-size="14" font-weight="500" fill="#712B13">${done}/${total}</text>
+  </svg>`;
+}
 function alunoDayHTML(d,dayIdx){
-  const exCards=d.exercises.map((ex,exIdx)=>{
+  // acha o exercício "atual" (o primeiro que ainda não terminou todas as séries)
+  const exStatus=d.exercises.map(ex=>{
     const nSets=parseInt(ex.sets)||3;
+    const done=Array.from({length:nSets},(_,i)=>ex.seriesLog?.[i]?.done?1:0).reduce((a,b)=>a+b,0);
+    return{nSets,done,allDone:done>=nSets&&nSets>0};
+  });
+  const curIdx=exStatus.findIndex(s=>!s.allDone);
+  const exCards=d.exercises.map((ex,exIdx)=>{
+    const{nSets,done,allDone}=exStatus[exIdx];
+    if(allDone){
+      return`<div class="ex-row-collapsed done"><i class="ti ti-check" style="font-size:15px;color:#3b6d11" aria-hidden="true"></i><span class="erc-name">${esc(ex.name)||"—"}</span><span class="erc-meta">${nSets}/${nSets}</span></div>`;
+    }
+    if(curIdx>=0&&exIdx>curIdx){
+      return`<div class="ex-row-collapsed"><i class="ti ti-lock" style="font-size:15px;color:#c7c3b8" aria-hidden="true"></i><span class="erc-name">${esc(ex.name)||"—"}</span><span class="erc-meta">${nSets} séries</span></div>`;
+    }
     const seriesCards=Array.from({length:nSets},(_,i)=>serieCardHTML(ex,i,getSerieState(ex,i))).join("");
     const restPill=ex.rest?`<span class="ex-pill accent-pill">⏱ ${ex.rest}s descanso</span>`:"";
-    const musclePill=ex.muscle?`<span class="ex-pill">🏋 ${esc(ex.muscle)}</span>`:"";
-    const doneSeries=Array.from({length:nSets},(_,i)=>ex.seriesLog?.[i]?.done?1:0).reduce((a,b)=>a+b,0);
-    const progBar=`<div class="ex-progbar">${Array.from({length:nSets},(_,i)=>`<span class="${i<doneSeries?"on":""}"></span>`).join("")}</div>`;
     return`<div class="ex-card">
       <div class="ex-head">
         <div class="ex-header-row">
-          <div class="ex-icon">${muscleIconSVG(ex.muscle)}</div>
-          <div class="ex-name">${esc(ex.name)||"—"}</div>
+          ${progressRingSVG(done,nSets)}
+          <div class="ex-header-txt">
+            <div class="ex-muscle-lab">${esc(ex.muscle||"treino")}</div>
+            <div class="ex-name">${esc(ex.name)||"—"}</div>
+          </div>
         </div>
-        ${progBar}
         <div class="ex-sub">
           <span class="ex-pill"><b>${nSets}</b> séries × <b>${ex.reps||"?"}</b> reps</span>
-          ${ex.weight?`<span class="ex-pill">⚖ ${esc(ex.weight)} kg</span>`:""}
-          ${restPill}${musclePill}
+          ${restPill}
         </div>
       </div>
       ${ex.how?`<div class="ex-how">💡 ${esc(ex.how)}</div>`:""}
