@@ -184,7 +184,10 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .ex-card{background:#fff;border:1.5px solid var(--line);border-radius:16px;margin-bottom:14px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.06)}
 .ex-card .ex-head{padding:14px 16px;border-bottom:1.5px solid var(--line)}
 .ex-header-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
-.ex-card .ex-icon{width:36px;height:36px;border-radius:10px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-size:16px;flex:none;font-family:var(--disp)}
+.ex-card .ex-icon{width:40px;height:40px;border-radius:10px;background:#fbe9e4;display:grid;place-items:center;flex:none}
+.ex-progbar{display:flex;gap:4px;margin-bottom:8px}
+.ex-progbar span{flex:1;height:5px;border-radius:3px;background:var(--line)}
+.ex-progbar span.on{background:#16a34a}
 .ex-card .ex-name{font-weight:800;font-size:18px;letter-spacing:-.02em;color:var(--ink);flex:1}
 .ex-card .ex-sub{display:flex;gap:6px;flex-wrap:wrap}
 .ex-card .ex-pill{font-size:12px;background:var(--bg2);border:1.5px solid var(--line);border-radius:20px;padding:4px 11px;color:var(--ink-dim);font-weight:600}
@@ -209,6 +212,10 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .sc-numfield input{border:none;background:transparent;color:#111;font-family:var(--mono);font-size:17px;font-weight:800;text-align:center;flex:1;min-width:0;height:42px;padding:0;outline:none}
 .sc-numfield input::-webkit-outer-spin-button,.sc-numfield input::-webkit-inner-spin-button{-webkit-appearance:none}
 /* PSE grade */
+.pse-toggle{width:calc(100% - 24px);margin:8px 12px 0;display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:9px;padding:11px 14px;font-size:13.5px;font-weight:700;color:#6b7280;cursor:pointer}
+.pse-toggle .pse-chev{font-size:12px;color:#9ca3af}
+.pse-toggle.done{background:#fdf0ef;border-color:var(--accent);color:var(--accent)}
+.pse-toggle.done .pse-chev{color:var(--accent)}
 .pse-section{padding:8px 12px 6px;border-top:1px solid #f3f4f6}
 .pse-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;font-weight:700;margin-bottom:7px}
 .pse-grid-row{display:grid;gap:5px;margin-bottom:5px}
@@ -982,7 +989,11 @@ function serieCardHTML(ex,i,state){
         </div>
       </div>
     </div>
-    <div class="pse-section">
+    <button type="button" class="pse-toggle${hasPSE?" done":""}" data-psetoggle="${ex.id}" data-si="${i}">
+      <span>${hasPSE?`PSE ${sr.pse} selecionada`:"Registrar esforço percebido (PSE)"}</span>
+      <span class="pse-chev">${hasPSE?"✓":"▾"}</span>
+    </button>
+    <div class="pse-section" id="pseSec_${ex.id}_${i}" style="display:none">
       <div class="pse-label">Esforço percebido (PSE 0–10)</div>
       <div class="pse-grid-row row6">${pseRow1}</div>
       <div class="pse-grid-row row5">${pseRow2}</div>
@@ -1006,18 +1017,36 @@ function getSerieState(ex,i){
   return"locked";
 }
 
+// mini ilustração SVG por grupo muscular — leve, sem depender de link externo
+function muscleIconSVG(muscle){
+  const m=(muscle||"").toLowerCase();
+  const c="#D85A30";
+  if(m.includes("perna")||m.includes("quadr")||m.includes("posterior")||m.includes("gluteo")||m.includes("glúteo")||m.includes("panturrilha"))
+    return`<svg width="26" height="26" viewBox="0 0 44 44"><circle cx="22" cy="8" r="4" fill="none" stroke="${c}" stroke-width="2"/><path d="M22 12 L22 24 M22 24 L15 40 M22 24 L29 40 M15 40 L11 40 M29 40 L33 40" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
+  if(m.includes("ombro")||m.includes("deltoid"))
+    return`<svg width="26" height="26" viewBox="0 0 44 44"><circle cx="22" cy="8" r="4" fill="none" stroke="${c}" stroke-width="2"/><path d="M22 12 L22 26 M22 15 L10 12 M22 15 L34 12 M22 26 L15 38 M22 26 L29 38" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
+  if(m.includes("peito")||m.includes("peitoral"))
+    return`<svg width="26" height="26" viewBox="0 0 44 44"><circle cx="22" cy="8" r="4" fill="none" stroke="${c}" stroke-width="2"/><path d="M22 12 L22 26 M22 17 L10 24 M22 17 L34 24 M22 26 L15 38 M22 26 L29 38" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
+  if(m.includes("core")||m.includes("abdom"))
+    return`<svg width="26" height="26" viewBox="0 0 44 44"><circle cx="22" cy="8" r="4" fill="none" stroke="${c}" stroke-width="2"/><path d="M22 12 L22 26 M22 15 L12 18 M22 15 L32 18 M22 26 L16 38 M22 26 L28 38" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round"/><circle cx="22" cy="20" r="3" fill="none" stroke="${c}" stroke-width="1.5"/></svg>`;
+  // costas/bíceps/tríceps/geral — puxada
+  return`<svg width="26" height="26" viewBox="0 0 44 44"><circle cx="22" cy="8" r="4" fill="none" stroke="${c}" stroke-width="2"/><path d="M22 12 L22 26 M22 15 L12 8 M22 15 L32 8 M22 26 L15 38 M22 26 L29 38" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
+}
 function alunoDayHTML(d,dayIdx){
   const exCards=d.exercises.map((ex,exIdx)=>{
     const nSets=parseInt(ex.sets)||3;
     const seriesCards=Array.from({length:nSets},(_,i)=>serieCardHTML(ex,i,getSerieState(ex,i))).join("");
     const restPill=ex.rest?`<span class="ex-pill accent-pill">⏱ ${ex.rest}s descanso</span>`:"";
     const musclePill=ex.muscle?`<span class="ex-pill">🏋 ${esc(ex.muscle)}</span>`:"";
+    const doneSeries=Array.from({length:nSets},(_,i)=>ex.seriesLog?.[i]?.done?1:0).reduce((a,b)=>a+b,0);
+    const progBar=`<div class="ex-progbar">${Array.from({length:nSets},(_,i)=>`<span class="${i<doneSeries?"on":""}"></span>`).join("")}</div>`;
     return`<div class="ex-card">
       <div class="ex-head">
         <div class="ex-header-row">
-          <div class="ex-icon">${exIdx+1}</div>
+          <div class="ex-icon">${muscleIconSVG(ex.muscle)}</div>
           <div class="ex-name">${esc(ex.name)||"—"}</div>
         </div>
+        ${progBar}
         <div class="ex-sub">
           <span class="ex-pill"><b>${nSets}</b> séries × <b>${ex.reps||"?"}</b> reps</span>
           ${ex.weight?`<span class="ex-pill">⚖ ${esc(ex.weight)} kg</span>`:""}
@@ -1684,6 +1713,12 @@ document.addEventListener("click",e=>{
     if(inp){const cur2=parseFloat(inp.value)||0;inp.value=+(cur2+delta).toFixed(2);inp.dispatchEvent(new Event("input"));}
     return;}
 
+  // PSE toggle — abre/fecha a grade de esforço só quando tocado
+  const pseToggle=t.closest("[data-psetoggle]");if(pseToggle){
+    const sec=document.getElementById(`pseSec_${pseToggle.dataset.psetoggle}_${pseToggle.dataset.si}`);
+    if(sec){const open=sec.style.display!=="none";sec.style.display=open?"none":"block";pseToggle.querySelector(".pse-chev").textContent=open?"▾":"▴";}
+    return;}
+
   // PSE button — start rest timer here
   const pse=t.closest("[data-pse]");if(pse){
     const exId=pse.dataset.ex,si=parseInt(pse.dataset.si),val=parseInt(pse.dataset.pse);
@@ -1709,6 +1744,10 @@ document.addEventListener("click",e=>{
         const cb=sc.querySelector(".conclude-btn");
         if(cb){cb.disabled=false;cb.classList.add("ready");cb.textContent=`✓ Concluir — PSE ${val} selecionada`;
           cb.style.background=PSE_COLORS[val]||"var(--accent)";cb.style.borderColor=PSE_COLORS[val]||"var(--accent)";}
+        // recolhe a grade e atualiza o toggle assim que o PSE é escolhido
+        const sec=sc.querySelector(".pse-section");if(sec)sec.style.display="none";
+        const tgl=sc.querySelector(".pse-toggle");
+        if(tgl){tgl.classList.add("done");tgl.querySelector("span").textContent=`PSE ${val} selecionada`;tgl.querySelector(".pse-chev").textContent="✓";}
       }
     }return;}
 
