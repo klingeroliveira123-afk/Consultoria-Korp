@@ -571,7 +571,8 @@ function mergeSessions(...arrays){
   return[...map.values()].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
 }
 // mescla semanas: mantém a estrutura de "base" (prescrição), mas usa o seriesLog de "alt" quando ele
-// tiver mais séries concluídas — assim as cargas/reps que o aluno registrou não se perdem
+// foi atualizado mais recentemente (por carimbo de hora) — assim tanto o progresso quanto o reset
+// pós-treino (que zera as séries pra treinar de novo) são respeitados corretamente
 function mergeWeeks(baseWeeks,altWeeks){
   if(!altWeeks?.length)return baseWeeks||[];
   if(!baseWeeks?.length)return altWeeks;
@@ -583,6 +584,12 @@ function mergeWeeks(baseWeeks,altWeeks){
       if(!ad)return d;
       return{...d,exercises:(d.exercises||[]).map(ex=>{
         const aex=(ad.exercises||[]).find(x=>x.id===ex.id);if(!aex)return ex;
+        const tsB=ex.seriesLogUpdatedAt||0,tsA=aex.seriesLogUpdatedAt||0;
+        if(tsA||tsB){
+          // temos carimbo de hora em pelo menos um lado: o mais recente vence, sem exceção
+          return tsA>tsB?{...ex,seriesLog:aex.seriesLog,seriesLogUpdatedAt:tsA}:ex;
+        }
+        // dado legado sem carimbo: mantém a heurística antiga como fallback
         const doneN=a=>(a||[]).filter(x=>x?.done).length;
         return doneN(aex.seriesLog)>doneN(ex.seriesLog)?{...ex,seriesLog:aex.seriesLog}:ex;
       })};
@@ -1248,6 +1255,10 @@ async function finishSession(weekId,dayCode,sessionPSE){
   const session={id:uid(),date:todayISO(),weekId:w.id,dayCode:d.code,startTime:new Date(ui.sessionStart).toISOString(),endTime,durationMin,totalVolumeLoad:Math.round(totalVL),muscleVolumeLoad:muscleVL,sessionPSE,trimpScore,exercises:d.exercises.map(ex=>({id:ex.id,name:ex.name,muscle:ex.muscle,seriesLog:ex.seriesLog||[]}))};
   if(!s.sessions)s.sessions=[];
   s.sessions.push(session);
+  // reseta o plano (o desempenho já está arquivado na sessão acima) para que o treino
+  // fique disponível de novo na próxima vez — carimba a hora para vencer na mesclagem
+  const resetStamp=Date.now();
+  d.exercises.forEach(ex=>{ex.seriesLog=[];ex.seriesLogUpdatedAt=resetStamp;});
   ui.sessionStart=null;
   if(isStudent){
     await saveStudentData(s);
@@ -1755,6 +1766,7 @@ document.addEventListener("click",e=>{
     const w=findWeek(ui.selWeek);const d=w?.days.find(d=>d.exercises.some(e=>e.id===exId));const ex=d?.exercises.find(e=>e.id===exId);
     if(ex&&ex.seriesLog?.[si]){
       ex.seriesLog[si].done=false;ex.seriesLog[si].resting=false;
+      ex.seriesLogUpdatedAt=Date.now();
       const sc=document.getElementById(`sc_${exId}_${si}`);
       if(sc)sc.outerHTML=serieCardHTML(ex,si,"active");
       toast("Série reaberta para edição","good");
@@ -1776,6 +1788,7 @@ document.addEventListener("click",e=>{
       if(ri?.value)ex.seriesLog[si].reps=parseInt(ri.value);
       ex.seriesLog[si].done=true;
       ex.seriesLog[si].resting=true;
+      ex.seriesLogUpdatedAt=Date.now();
       if(!ui.sessionStart){ui.sessionStart=Date.now();ui.sessionWeekId=ui.selWeek;ui.sessionDayCode=d.code;startSessionTimerDisplay();}
       // substituir card ativo pelo timer inline
       const nSets=parseInt(ex.sets)||3;
